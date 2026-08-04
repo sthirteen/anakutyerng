@@ -1109,7 +1109,7 @@ function buildPdf(){
          "   ·   "+taker+(takerEmail?"   ·   "+takerEmail:""), M, y);
 
   /* ---------- can-do ---------- */
-  y+=24; y=pdfHeading(d,"AT THIS LEVEL YOU CAN TYPICALLY",M,y);
+  y+=24; y=ensureSpace(d,y,90); y=pdfHeading(d,"AT THIS LEVEL YOU CAN TYPICALLY",M,y);
   d.setTextColor(...INK); d.setFont("helvetica","normal"); d.setFontSize(9.5);
   info.cando.forEach(c=>{
     d.splitTextToSize("•  "+c, CW-10).forEach((l,k)=>{ d.text(l, M+(k?10:0), y); y+=13; });
@@ -1117,7 +1117,7 @@ function buildPdf(){
   });
 
   /* ---------- by skill ---------- */
-  y+=12; y=pdfHeading(d,"PERFORMANCE BY SKILL",M,y);
+  y+=12; y=ensureSpace(d,y,170); y=pdfHeading(d,"PERFORMANCE BY SKILL",M,y);
   ["Grammar","Vocabulary","Cloze","Reading","Listening","Error correction","Register","Pictures"].forEach(k=>{
     const v=r.perSkill[k]; if(!v) return;
     d.setTextColor(...INK); d.setFont("helvetica","normal"); d.setFontSize(9.5);
@@ -1130,7 +1130,7 @@ function buildPdf(){
   });
 
   /* ---------- by band ---------- */
-  y+=12; y=pdfHeading(d,"PERFORMANCE BY CEFR BAND",M,y);
+  y+=12; y=ensureSpace(d,y,170); y=pdfHeading(d,"PERFORMANCE BY CEFR BAND",M,y);
   d.setFontSize(7.5); d.setTextColor(...MUTED);
   d.text("BAND",M,y); d.text("LEVEL",M+60,y); d.text("CORRECT",M+250,y); d.text("RESULT",W-M,y,{align:"right"});
   y+=5; d.setDrawColor(...LINE); d.line(M,y,W-M,y); y+=13;
@@ -1145,7 +1145,7 @@ function buildPdf(){
   });
 
   /* ---------- what to work on ---------- */
-  y+=8; y=pdfHeading(d,"WHAT TO WORK ON NEXT",M,y);
+  y+=8; y=ensureSpace(d,y,95); y=pdfHeading(d,"WHAT TO WORK ON NEXT",M,y);
   d.setTextColor(...INK); d.setFont("helvetica","normal"); d.setFontSize(9.5);
   info.advice.forEach(a=>{
     const plain=a.replace(/<[^>]+>/g,"");
@@ -1153,7 +1153,7 @@ function buildPdf(){
     y+=2;
   });
 
-  /* ---------- review, on its own page(s) ---------- */
+  /* ---------- review, always starting on a fresh page ---------- */
   d.addPage(); y=M;
   d.setFillColor(...NAVY); d.rect(M,y,CW,30,"F");
   d.setTextColor(255,255,255); d.setFont("helvetica","bold"); d.setFontSize(11);
@@ -1165,7 +1165,7 @@ function buildPdf(){
     const qtext=(q.cloze? q.cloze.title+" — "+q.q : (q.passage? q.passage.title+" — "+q.q : q.q));
     const lines=d.splitTextToSize((i+1)+". "+qtext, CW-70);
     const blockH=lines.length*11 + 24 + (q.skill==="Listening"?11:0);
-    if(y+blockH > 800){ d.addPage(); y=M; }
+    if(y+blockH > 772){ d.addPage(); y=M; }
     d.setDrawColor(...(ok?[44,122,75]:[179,66,58])); d.setLineWidth(2);
     d.line(M,y-8,M,y+blockH-16);
     d.setTextColor(...INK); d.setFont("helvetica","bold");
@@ -1190,6 +1190,13 @@ function buildPdf(){
            "not an accredited examination   ·   page "+pg+" of "+pages, W/2, 820, {align:"center"});
   }
   return d;
+}
+
+/* The footer sits at y=820. Anything drawn past ~772 collides with it, so
+   sections ask for room first and start a new page when there isn't any. */
+function ensureSpace(d,y,h){
+  if(y+h > 772){ d.addPage(); return 42; }
+  return y;
 }
 
 function pdfHeading(d,txt,x,y){
