@@ -80,6 +80,10 @@
   .cloze .ttl{font-weight:700;font-size:13px;letter-spacing:.05em;text-transform:uppercase;margin:0 0 8px;white-space:normal}
   .gap{display:inline-block;min-width:58px;text-align:center;border-bottom:2px solid var(--muted);
        font-weight:700;color:var(--muted);padding:0 6px;margin:0 2px}
+  .gapq{margin:0 0 16px}
+  .gaplbl{font-size:12.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--accent-dark);margin:0 0 7px}
+  .gapopts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:0}
+  .opt.optsm{padding:10px 12px;font-size:14.5px}
   .gap.now{border-bottom-color:var(--accent);background:var(--accent-soft);color:var(--accent-dark);border-radius:4px 4px 0 0}
   .passage{background:#f8fafc;border:1px solid #e3eaf0;border-radius:10px;padding:16px 18px;margin:0 0 18px;font-size:15px;line-height:1.6}
   .passage .ttl{font-weight:700;font-size:13px;letter-spacing:.05em;text-transform:uppercase;margin:0 0 8px}
@@ -164,6 +168,7 @@
   details{margin:0 0 22px}
   summary{cursor:pointer;font-weight:600;font-size:15px;padding:10px 0;color:var(--brand)}
 
+  .printonly{display:none}
   ul.adv{margin:0 0 22px;padding-left:20px}
   ul.adv li{margin:0 0 7px}
   .foot{font-size:12.5px;color:var(--muted);text-align:center;margin:24px 0 0;line-height:1.6}
@@ -175,6 +180,7 @@
     .noprint{display:none !important}
     .badge{background:#123345 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .pill,.mini i,.fact{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .printonly{display:block !important}
     details{display:block}
     details>summary{display:none}
   }
@@ -196,18 +202,18 @@
   <p class="lede">A full placement test that assesses your English against the Common European Framework of Reference (CEFR), from A1 to C2.</p>
 
   <div class="facts">
-    <div class="fact"><b>53</b><span>questions</span></div>
-    <div class="fact"><b>~22 min</b><span>to complete</span></div>
+    <div class="fact"><b>36</b><span>questions</span></div>
+    <div class="fact"><b>~15 min</b><span>to complete</span></div>
     <div class="fact"><b>A1–C2</b><span>CEFR result</span></div>
     <div class="fact"><b>Certificate</b><span>on completion</span></div>
   </div>
 
   <div class="note">
     <strong>Before you begin:</strong> this test covers grammar, vocabulary, gap-fill, reading, listening,
-    error correction and choosing the right tone for a situation. Six questions are listening questions — your
+    error correction and choosing the right tone for a situation. Four questions are listening questions — your
     device will read a short recording aloud, so please use headphones or turn the volume up. You may replay
     each recording up to 3 times. There is no going back once you answer, so read each question carefully.
-    Set aside about 22 minutes and finish in one sitting.
+    Set aside about 15 minutes and finish in one sitting.
   </div>
 
   <form id="loginForm" autocomplete="off">
@@ -330,31 +336,45 @@ const SHEET_URL = "";           /* <<< PASTE YOUR APPS SCRIPT URL HERE.
                                    Steps: RESULTS-SETUP.md */
 
 /* ============================================================
-   QUESTION BANK — 53 items, 9 per band (8 at C2)
-   Bands are deliberately equal-sized so every level is measured with
-   the same confidence. Item types beyond the simple version:
-     Cloze            — connected text, each gap scored separately
+   QUESTION BANK — 36 items, exactly 6 per band A1-C2
+   Equal bands so every level is measured with the same confidence;
+   the mastery threshold is a consistent 4 of 6. Cut from 53 to hold
+   the test to about 15 minutes without weakening any band.
+
+   Item types beyond the simple version:
+     Cloze            — connected text; all four gaps of a text are
+                        shown on ONE screen but scored separately, so
+                        gaps in the same text can sit at different bands
      Error correction — active knowledge, not recognition
      Register         — appropriacy of tone for a situation
    ============================================================ */
 /* ---------- reading passages ---------- */
+/* ---------- reading passages ---------- */
 const P_HOURS = { title:"Village health post", text:"OPEN — Monday to Friday, 8:00 a.m. to 5:00 p.m. CLOSED — Saturday, Sunday and public holidays. For an emergency at night, telephone 012 700 700." };
 const P_CLASS = { title:"Community centre — English class", text:"The free English class starts on Monday 3 August. It runs every Monday, Wednesday and Friday, from 5:00 p.m. to 6:30 p.m. The class is for students aged 12 to 18. Please bring a notebook and a pen. There are only 25 places, so come to the office before Friday to write your name on the list." };
 const P_LAKE  = { title:"The Tonlé Sap", text:"Every year the Tonlé Sap river changes direction. In the dry season it flows south into the Mekong. But when the monsoon rains come, the Mekong rises so high that it pushes the water back the other way, and the lake grows to about five times its normal size. The flooded forest around the lake is where most of the fish lay their eggs, and this is why the lake feeds so many families. Fishers say the catch is smaller now than it was twenty years ago, and they blame the changing weather as much as the number of boats on the water." };
-const P_VIEW  = { title:"Opinion — what English is for", text:"There is a persistent assumption in development work that English proficiency and opportunity rise together, and that the first therefore produces the second. The correlation is real enough; the causal claim is considerably shakier. Where English opens doors, it tends to do so because it functions as a proxy for something else the labour market values — years of schooling, family resources, the confidence that comes of both. Programmes that treat the language as the whole intervention, rather than as one component of it, are apt to produce graduates who can describe their aspirations fluently in a second language while remaining exactly as far from realising them as before. None of which is an argument against teaching English. It is an argument against expecting the language, unaided, to do work that only broader structural change can do." };
 
-/* ---------- cloze texts (each blank is its own scored item) ---------- */
-const CLOZE_MAIL = { title:"An email to a teacher", parts:[
-  "Dear Teacher Sokha,\n\nI am writing ", " tell you that I cannot come to class on Wednesday. My younger brother is sick and I have to take him ",
+/* A C2 item does not need hard words. This passage uses simple language, but you
+   have to read between the lines to answer it — which is what C2 reading is. */
+const P_MEETING = { title:"At the meeting", text:"Everyone at the meeting agreed that the new plan was a good idea. Nobody said a single word against it. But when the manager asked who would like to lead it, the room went quiet. One person said she was very busy until December. Another said the plan would surely work better next year. A third said he would help, as long as someone else took charge. The plan was written down, praised by everybody, and never mentioned again." };
+
+/* ---------- gap-fill texts: all four gaps are shown on one screen ---------- */
+const CLOZE_MAIL = { id:"MAIL", title:"An email to a teacher", parts:[
+  "Dear Teacher Sokha,\n\nI am writing ",
+  " tell you that I cannot come to class on Wednesday. My younger brother is sick and I have to take him ",
   " the health post. I am very sorry. Could you please tell me what homework I ",
-  " do at home? I ", " study it carefully and bring it to the next class.\n\nThank you very much.\n\nSophea"
+  " do at home? I ",
+  " study it carefully and bring it to the next class.\n\nThank you very much.\n\nSophea"
 ]};
-const CLOZE_WORK = { title:"A report extract", parts:[
-  "The pilot programme was, ", " the whole, a qualified success. Attendance held steady at 84 per cent, a figure that compares favourably ",
-  " similar schemes in the region. What the data cannot tell us, however, is ",
-  " that attendance translated into lasting change; the follow-up survey was abandoned halfway through for reasons that remain unclear. Until that gap is filled, any decision to expand the programme rests ",
-  " assumption rather than evidence."
+
+const CLOZE_WORK = { id:"WORK", title:"A note about the training", parts:[
+  "The training last month went well, ",
+  " the whole. Nearly everyone came, and the results were better ",
+  " we expected. ",
+  " the training has really changed the way people work every day is still unclear. We planned to ask everyone again after three months, but that survey never happened. ",
+  " it does, we cannot honestly say the training worked."
 ]};
+
 
 const PIC = {
   mango:"<svg viewBox='0 0 200 170' width='170' height='145'><g transform='rotate(22 100 100)'><ellipse cx='100' cy='94' rx='67' ry='43' fill='#8fae3e'/><ellipse cx='100' cy='103' rx='66' ry='40' fill='#f0b429'/><ellipse cx='118' cy='114' rx='44' ry='26' fill='#dd9c1b' opacity='.45'/><ellipse cx='72' cy='92' rx='20' ry='9' fill='#fff' opacity='.28'/></g><path d='M44 74 L31 57' stroke='#7a5c1e' stroke-width='7' stroke-linecap='round'/><path d='M31 57c2-17 18-27 30-24-2 17-16 28-30 24z' fill='#4d8b3c'/></svg>",
@@ -362,21 +382,15 @@ const PIC = {
 };
 
 const QUESTIONS = [
-  /* ==================== A1 ==================== */
+  /* ==================== A1 (6) ==================== */
   { level:"A1", skill:"Pictures", img:PIC.mango, q:"What is this?",
     opts:["A mango","A banana","A coconut","A pineapple"], a:0 },
   { level:"A1", skill:"Grammar", q:"______ name is Sophea.",
     opts:["My","Me","I","Mine"], a:0 },
   { level:"A1", skill:"Grammar", q:"She ______ a teacher at our school.",
     opts:["is","are","am","be"], a:0 },
-  { level:"A1", skill:"Grammar", q:"Dara ______ to school every day.",
-    opts:["goes","go","going","is go"], a:0 },
   { level:"A1", skill:"Vocabulary", q:"Phnom Penh is a very big ______.",
     opts:["city","country","river","school"], a:0 },
-  { level:"A1", skill:"Pictures", img:PIC.umbrella, q:"What is this?",
-    opts:["An umbrella","A hat","A tent","A kite"], a:0 },
-  { level:"A1", skill:"Spelling", q:"Which word is spelled correctly?",
-    opts:["banana","bannana","bananna","banarna"], a:0 },
   { level:"A1", skill:"Reading", passage:P_HOURS,
     q:"When is the health post closed?",
     opts:["Saturday and Sunday","Monday and Friday","Every afternoon","Only at night"], a:0 },
@@ -385,23 +399,23 @@ const QUESTIONS = [
     q:"True or false? The market closes at five in the afternoon.",
     opts:["True","False"], a:0 },
 
-  /* ==================== A2 ==================== */
+  /* ==================== A2 (6) ====================
+     NOTE ON ORDER: the four CLOZE_MAIL gaps sit together here so they render on
+     one screen, even though gaps 3 and 4 are B1 items. Array order is purely
+     presentational — scoring reads each item's own `level`. Do not "tidy" these
+     back into band order or the gaps will split across two screens again. */
   { level:"A2", skill:"Grammar", q:"I ______ to Siem Reap last year.",
     opts:["went","go","have gone","going"], a:0 },
   { level:"A2", skill:"Grammar", q:"There ______ any milk in the fridge.",
     opts:["isn't","aren't","no","not"], a:0 },
-  { level:"A2", skill:"Vocabulary", q:"My sister is very ______. She always helps our neighbours.",
-    opts:["kind","kindly","kindness","kinder"], a:0 },
-  { level:"A2", skill:"Spelling", q:"Which word is spelled correctly?",
-    opts:["because","becuase","becouse","becasue"], a:0 },
-  { level:"A2", skill:"Error correction", q:"Which sentence is correct?",
-    opts:["He doesn't like coffee.","He don't like coffee.","He doesn't likes coffee.","He no like coffee."], a:0 },
   { level:"A2", skill:"Cloze", cloze:CLOZE_MAIL, blank:1,
-    q:"Choose the best word for gap 1.",
-    opts:["to","for","that","of"], a:0 },
+    q:"Gap 1", opts:["to","for","that","of"], a:0 },
   { level:"A2", skill:"Cloze", cloze:CLOZE_MAIL, blank:2,
-    q:"Choose the best word for gap 2.",
-    opts:["to","at","in","on"], a:0 },
+    q:"Gap 2", opts:["to","at","in","on"], a:0 },
+  { level:"B1", skill:"Cloze", cloze:CLOZE_MAIL, blank:3,
+    q:"Gap 3", opts:["should","will","am","would"], a:0 },
+  { level:"B1", skill:"Cloze", cloze:CLOZE_MAIL, blank:4,
+    q:"Gap 4", opts:["will","am","would","did"], a:0 },
   { level:"A2", skill:"Reading", passage:P_CLASS,
     q:"When does the English class start?",
     opts:["Monday 3 August","Friday 3 August","Monday 5 August","Wednesday 3 August"], a:0 },
@@ -410,21 +424,11 @@ const QUESTIONS = [
     q:"True or false? The speaker wants the eight o'clock bus.",
     opts:["True","False"], a:1 },
 
-  /* ==================== B1 ==================== */
+  /* ==================== B1 (6) ==================== */
   { level:"B1", skill:"Grammar", q:"If it rains tomorrow, we ______ the football match.",
     opts:["will cancel","cancelled","would cancel","are cancel"], a:0 },
-  { level:"B1", skill:"Grammar", q:"I've been living in Phnom Penh ______ 2019.",
-    opts:["since","for","from","during"], a:0 },
   { level:"B1", skill:"Vocabulary", q:"Could you ______ me a favour? Please check this letter for me.",
     opts:["do","make","give","put"], a:0 },
-  { level:"B1", skill:"Error correction", q:"Which sentence is correct?",
-    opts:["I have lived here for five years.","I have lived here since five years.","I am living here for five years.","I live here since five years."], a:0 },
-  { level:"B1", skill:"Cloze", cloze:CLOZE_MAIL, blank:3,
-    q:"Choose the best word for gap 3.",
-    opts:["should","will","am","would"], a:0 },
-  { level:"B1", skill:"Cloze", cloze:CLOZE_MAIL, blank:4,
-    q:"Choose the best word for gap 4.",
-    opts:["will","am","would","did"], a:0 },
   { level:"B1", skill:"Reading", passage:P_CLASS,
     q:"What must a student do before Friday?",
     opts:["Put their name on the list at the office","Pay the fee for the class",
@@ -433,30 +437,23 @@ const QUESTIONS = [
     audio:"We were going to meet on Tuesday, but Dara had to see the doctor. So now we will meet on Thursday morning instead.",
     q:"When will they meet now?",
     opts:["Thursday morning","Tuesday morning","Thursday afternoon","Tuesday afternoon"], a:0 },
-  { level:"B1", skill:"Register", q:"You are texting a friend to say you cannot come to dinner tonight. Which is most suitable?",
-    opts:["Sorry, I can't make it tonight — something came up.",
-          "I regret to inform you that I shall be unable to attend this evening.",
-          "I will not come tonight.",
-          "Your kind invitation is hereby respectfully declined."], a:0 },
 
-  /* ==================== B2 ==================== */
+  /* ==================== B2 (6) ==================== */
   { level:"B2", skill:"Grammar", q:"By the time we arrived at the conference, the ceremony ______.",
     opts:["had already finished","has already finished","already finishes","was already finish"], a:0 },
-  { level:"B2", skill:"Grammar", q:"She suggested ______ the meeting until Monday.",
-    opts:["postponing","to postpone","postpone","postponed"], a:0 },
-  { level:"B2", skill:"Vocabulary", q:"After a long discussion, the two sides finally reached a ______.",
-    opts:["compromise","comparison","commitment","competition"], a:0 },
   { level:"B2", skill:"Error correction", q:"Which sentence is correct?",
     opts:["Not only did he arrive late, but he also forgot the report.",
           "Not only he arrived late, but he also forgot the report.",
           "Not only did he arrived late, but he also forgot the report.",
           "Not only arrived he late, but he also forgot the report."], a:0 },
   { level:"B2", skill:"Cloze", cloze:CLOZE_WORK, blank:1,
-    q:"Choose the best word for gap 1.",
-    opts:["on","in","at","by"], a:0 },
+    q:"Gap 1", opts:["on","in","at","by"], a:0 },
   { level:"B2", skill:"Cloze", cloze:CLOZE_WORK, blank:2,
-    q:"Choose the best word for gap 2.",
-    opts:["with","to","against","for"], a:0 },
+    q:"Gap 2", opts:["than","then","that","as"], a:0 },
+  { level:"C1", skill:"Cloze", cloze:CLOZE_WORK, blank:3,
+    q:"Gap 3", opts:["Whether","If","That","What"], a:0 },
+  { level:"C1", skill:"Cloze", cloze:CLOZE_WORK, blank:4,
+    q:"Gap 4", opts:["Until","Unless","Since","While"], a:0 },
   { level:"B2", skill:"Reading", passage:P_LAKE,
     q:"Why does the lake become much bigger in the rainy season?",
     opts:["The Mekong rises and pushes the water back into the lake",
@@ -470,84 +467,47 @@ const QUESTIONS = [
           "It was excellent and everyone understood it",
           "It was a complete waste of time",
           "The forms were clear but the trainer was poor"], a:0 },
-  { level:"B2", skill:"Register", q:"You are emailing a government office for the first time to request information. Which opening is most suitable?",
-    opts:["I am writing to enquire about the requirements for registering a small organisation.",
-          "Hey — I need to know how to register an organisation.",
-          "I demand to be told how to register an organisation.",
-          "Hope you're well! Quick one — how do I register?"], a:0 },
-  /* ==================== C1 ==================== */
+
+  /* ==================== C1 (6) ==================== */
   { level:"C1", skill:"Grammar", q:"Rarely ______ such a well-organised training course.",
     opts:["have I attended","I have attended","did I attended","I attended"], a:0 },
-  { level:"C1", skill:"Grammar", q:"The report, ______ conclusions were disputed, has now been withdrawn.",
-    opts:["whose","which","of which the","that its"], a:0 },
-  { level:"C1", skill:"Vocabulary", q:"His argument was completely ______: the contradictions piled up until nobody could follow it.",
-    opts:["incoherent","coherent","cohesive","conclusive"], a:0 },
-  { level:"C1", skill:"Error correction", q:"Which sentence is correct?",
-    opts:["Little did we realise how much work the project would involve.",
-          "Little we did realise how much work the project would involve.",
-          "Little did we realised how much work the project would involve.",
-          "Little we realised how much work would the project involve."], a:0 },
-  { level:"C1", skill:"Cloze", cloze:CLOZE_WORK, blank:3,
-    q:"Choose the best word for gap 3.",
-    opts:["whether","if","that","which"], a:0 },
-  { level:"C1", skill:"Cloze", cloze:CLOZE_WORK, blank:4,
-    q:"Choose the best word for gap 4.",
-    opts:["on","in","at","with"], a:0 },
+  { level:"C1", skill:"Vocabulary", q:"His argument did not hold together: the more he explained, the ______ sense it made.",
+    opts:["less","fewer","lesser","least"], a:0 },
   { level:"C1", skill:"Reading", passage:P_LAKE,
     q:"What do the fishers believe about the smaller catch?",
     opts:["Both the weather and the number of boats are to blame",
           "The changing weather is the only cause",
           "Too many boats is the only cause",
           "Nobody has any idea what the cause is"], a:0 },
-  { level:"C1", skill:"Listening", rate:1.02,
-    audio:"I'd stop short of calling the pilot a failure, but the results were thin enough that scaling it up now would be premature.",
-    q:"What is the speaker's view of the pilot?",
-    opts:["It was not a failure, but it is too early to expand it",
-          "It failed, so it should be stopped completely",
-          "It succeeded, so it should be expanded at once",
-          "The results were strong but the timing is wrong"], a:0 },
-  { level:"C1", skill:"Register", q:"A colleague's proposal has a serious gap. You want to raise it in a meeting without causing offence. Which is most suitable?",
-    opts:["I wonder whether we've fully accounted for the funding gap?",
+  { level:"C1", skill:"Register", q:"A colleague's plan has a problem you can see. You want to raise it in a meeting without upsetting anyone. Which is best?",
+    opts:["I wonder whether we've thought about where the money will come from?",
           "This won't work.",
-          "You've clearly missed the funding gap.",
-          "I'm afraid your proposal is fundamentally flawed."], a:0 },
+          "You've clearly forgotten about the money.",
+          "I'm afraid your plan has a serious fault in it."], a:0 },
 
-  /* ==================== C2 ==================== */
+  /* ==================== C2 (6) ==================== */
   { level:"C2", skill:"Grammar", q:"Had I known about the flood, I ______ my journey quite differently.",
     opts:["would have planned","would plan","had planned","will have planned"], a:0 },
   { level:"C2", skill:"Grammar", q:"______ the delay, the shipment would have arrived on Tuesday.",
     opts:["But for","Except for","Apart from","Unless"], a:0 },
-  { level:"C2", skill:"Vocabulary", q:"The minister's answer was deliberately ______, because he did not want to promise anything.",
-    opts:["evasive","elusive","illusive","evocative"], a:0 },
   { level:"C2", skill:"Error correction", q:"Which sentence is correct?",
-    opts:["Seldom has a report been so widely misinterpreted.",
-          "Seldom a report has been so widely misinterpreted.",
-          "Seldom has been a report so widely misinterpreted.",
-          "Seldom did a report has been so widely misinterpreted."], a:0 },
-  { level:"C2", skill:"Reading", passage:P_VIEW,
-    q:"Which best describes the writer's position?",
-    opts:["English matters, but on its own it cannot deliver the opportunity often claimed for it",
-          "English proficiency reliably causes improved economic opportunity",
-          "Teaching English in development work is a waste of resources",
-          "The link between English and opportunity is entirely imaginary"], a:0 },
-  { level:"C2", skill:"Reading", passage:P_VIEW,
-    q:"What does the writer suggest English often actually measures?",
-    opts:["Advantages a person already had, such as schooling and family resources",
-          "A person's natural aptitude for languages",
-          "How much the labour market values communication skills",
-          "The quality of the teaching programme they attended"], a:0 },
-  { level:"C2", skill:"Listening", rate:1.05,
-    audio:"It's not that the committee opposed the plan outright. They simply kept asking for more detail until the funding window closed, which amounts to much the same thing.",
-    q:"What is the speaker implying about the committee?",
-    opts:["They blocked the plan without ever openly rejecting it",
-          "They supported the plan but ran out of time",
-          "They rejected the plan clearly and immediately",
-          "They wanted more detail so they could approve the plan"], a:0 },
-  { level:"C2", skill:"Register", q:"You must decline a funder's request in writing while keeping the relationship warm. Which is most suitable?",
-    opts:["While we're not in a position to take this on at present, we'd very much welcome the chance to revisit it next year.",
+    opts:["Seldom has a report been so widely misunderstood.",
+          "Seldom a report has been so widely misunderstood.",
+          "Seldom has been a report so widely misunderstood.",
+          "Seldom did a report has been so widely misunderstood."], a:0 },
+  { level:"C2", skill:"Vocabulary", q:"The minister's answer was deliberately ______, because he did not want to promise anything.",
+    opts:["vague","vast","vain","valid"], a:0 },
+  { level:"C2", skill:"Reading", passage:P_MEETING,
+    q:"What does the writer want us to understand about the meeting?",
+    opts:["The team did not really support the plan, even though nobody said so",
+          "The team supported the plan but had no time for it this year",
+          "The manager did not want to lead the plan herself",
+          "The plan failed because it was written down badly"], a:0 },
+  { level:"C2", skill:"Register", q:"You must say no to a funder's request, but you want to keep a warm relationship. Which is best?",
+    opts:["We're not able to take this on right now, but we'd love to look at it again next year.",
           "Unfortunately this is not possible. Please do not ask again.",
-          "We cannot do this, as we have already explained more than once.",
-          "It is with the profoundest regret that we find ourselves compelled to refuse your esteemed request."], a:0 }
+          "We cannot do this, as we have already told you more than once.",
+          "It is with the deepest regret that we find ourselves obliged to refuse your esteemed request."], a:0 }
 ];
 
 /* ---- CEFR band metadata ---- */
@@ -590,7 +550,7 @@ const BAND_INFO = {
    ============================================================ */
 let taker="", takerEmail="",
     idx=0, answers=new Array(QUESTIONS.length).fill(null),
-    plays=new Array(QUESTIONS.length).fill(0), t0=0, timer=null, selected=null;
+    plays=new Array(QUESTIONS.length).fill(0), t0=0, timer=null, selected=null, picked={};
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -643,90 +603,147 @@ function speak(text,rate,onEnd){
   return true;
 }
 
-/* ---- render one question ---- */
+/* ---- render the current screen (one question, or one gap-fill text) ---- */
 function render(){
   selected=null;
-  const q=QUESTIONS[idx];
-  $("counter").textContent="Question "+(idx+1)+" of "+QUESTIONS.length;
+  const group=groupAt(idx);
+  const isGroup=group.length>1;
+  picked={};                       /* for grouped screens: gap number -> option index */
+
+  const first=QUESTIONS[group[0]];
+  $("counter").textContent = isGroup
+    ? "Questions "+(group[0]+1)+"–"+(group[group.length-1]+1)+" of "+QUESTIONS.length
+    : "Question "+(idx+1)+" of "+QUESTIONS.length;
   $("fill").style.width=(idx/QUESTIONS.length*100)+"%";
   $("nextBtn").disabled=true;
-  $("nextBtn").textContent=(idx===QUESTIONS.length-1)?"Finish & see my report":"Next";
+  $("nextBtn").textContent=(group[group.length-1]===QUESTIONS.length-1)?"Finish & see my result":"Next";
 
-  let html='<span class="tag">'+q.skill+'</span>';
+  let html='<span class="tag">'+first.skill+'</span>';
 
-  if(q.img){
-    html+='<div class="pic">'+q.img+'</div>';
-  }
-  if(q.cloze){
-    let t='<div class="cloze"><div class="ttl">'+esc(q.cloze.title)+'</div>';
-    q.cloze.parts.forEach((seg,n)=>{
+  if(first.img)     html+='<div class="pic">'+first.img+'</div>';
+  if(first.passage) html+='<div class="passage"><div class="ttl">'+esc(first.passage.title)+'</div>'+esc(first.passage.text)+'</div>';
+
+  if(first.cloze){
+    let t='<div class="cloze"><div class="ttl">'+esc(first.cloze.title)+'</div>';
+    first.cloze.parts.forEach((seg,n)=>{
       t+=esc(seg);
-      if(n<q.cloze.parts.length-1){
-        const num=n+1;
-        t+='<span class="gap'+(num===q.blank?' now':'')+'">'+num+'</span>';
-      }
+      if(n<first.cloze.parts.length-1) t+='<span class="gap">'+(n+1)+'</span>';
     });
     html+=t+'</div>';
   }
-  if(q.passage){
-    html+='<div class="passage"><div class="ttl">'+esc(q.passage.title)+'</div>'+esc(q.passage.text)+'</div>';
-  }
-  if(q.skill==="Listening"){
+
+  if(first.skill==="Listening"){
     html+='<div class="audio">'+
           '<button class="play" id="playBtn">&#9654;&nbsp; Play the recording</button>'+
           '<p class="plays" id="playInfo">You may play it up to 3 times.</p>'+
           '<div class="fallback hidden" id="fb"></div></div>';
   }
-  html+='<div class="qtext">'+esc(q.q)+'</div><div class="opts" id="opts"></div>';
+
+  if(isGroup){
+    html+='<p class="qtext" style="font-size:16px;margin-bottom:14px">Choose the best word for each gap.</p>';
+    group.forEach(gi=>{
+      const q=QUESTIONS[gi];
+      html+='<div class="gapq"><div class="gaplbl">Gap '+q.blank+'</div>'+
+            '<div class="opts gapopts" data-gi="'+gi+'"></div></div>';
+    });
+  }else{
+    html+='<div class="qtext">'+esc(first.q)+'</div><div class="opts" id="opts"></div>';
+  }
+
   $("qbox").innerHTML=html;
 
-  // options — shuffled, except True/False items which keep their natural order
+  /* build the option rows */
+  if(isGroup){
+    group.forEach(gi=>{
+      const q=QUESTIONS[gi];
+      const box=$("qbox").querySelector('.gapopts[data-gi="'+gi+'"]');
+      buildOptions(box,q,gi,true);
+    });
+  }else{
+    buildOptions($("opts"),first,group[0],false);
+  }
+
+  if(first.skill==="Listening") wireAudio(first);
+
+  $("hint").textContent = first.cloze ? "Answer all four gaps"
+    : (first.skill==="Listening" ? "Listen, then choose one answer" : "Choose one answer");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function buildOptions(box,q,qi,grouped){
   const pairs=q.opts.map((t,i)=>({t,i}));
   const order=q.fixed?pairs:shuffle(pairs);
-  const box=$("opts");
-  order.forEach((o,pos)=>{
+  order.forEach(o=>{
     const el=document.createElement("label");
-    el.className="opt";
-    el.innerHTML='<input type="radio" name="opt" value="'+o.i+'"><span>'+esc(o.t)+'</span>';
+    el.className="opt"+(grouped?" optsm":"");
+    el.innerHTML='<input type="radio" name="opt'+qi+'" value="'+o.i+'"><span>'+esc(o.t)+'</span>';
     el.addEventListener("click",()=>{
       [...box.children].forEach(c=>c.classList.remove("sel"));
       el.classList.add("sel");
       el.querySelector("input").checked=true;
-      selected=o.i;
-      $("nextBtn").disabled=false;
+      if(grouped){ picked[qi]=o.i; }
+      else{ selected=o.i; }
+      refreshNext();
     });
     box.appendChild(el);
   });
+}
 
-  if(q.skill==="Listening"){
-    const btn=$("playBtn"), info=$("playInfo");
-    if(!window.speechSynthesis){
-      btn.disabled=true; btn.textContent="Audio not supported on this browser";
-      const fb=$("fb"); fb.classList.remove("hidden");
-      fb.innerHTML="<b>Transcript (audio unavailable):</b><br>"+esc(q.audio);
-    }
-    btn.addEventListener("click",()=>{
-      if(plays[idx]>=3) return;
-      plays[idx]++;
-      btn.disabled=true; btn.innerHTML="&#9835;&nbsp; Playing&hellip;";
-      speak(q.audio,q.rate,()=>{
-        const left=3-plays[idx];
-        if(left>0){ btn.disabled=false; btn.innerHTML="&#8635;&nbsp; Play again"; info.textContent=left+" play"+(left===1?"":"s")+" remaining."; }
-        else{ btn.disabled=true; btn.innerHTML="No plays remaining"; info.textContent="Choose the best answer below."; }
-      });
-    });
+function refreshNext(){
+  const group=groupAt(idx);
+  const ready = group.length>1
+    ? group.every(gi=>picked[gi]!==undefined)
+    : selected!==null;
+  $("nextBtn").disabled=!ready;
+}
+
+function wireAudio(q){
+  const btn=$("playBtn"), info=$("playInfo");
+  if(!window.speechSynthesis){
+    btn.disabled=true; btn.textContent="Audio not supported on this browser";
+    const fb=$("fb"); fb.classList.remove("hidden");
+    fb.innerHTML="<b>Transcript (audio unavailable):</b><br>"+esc(q.audio);
   }
-  $("hint").textContent = q.skill==="Listening" ? "Listen, then choose one answer" : "Choose one answer";
-  window.scrollTo({top:0,behavior:"smooth"});
+  btn.addEventListener("click",()=>{
+    if(plays[idx]>=3) return;
+    plays[idx]++;
+    btn.disabled=true; btn.innerHTML="&#9835;&nbsp; Playing&hellip;";
+    speak(q.audio,q.rate,()=>{
+      const left=3-plays[idx];
+      if(left>0){ btn.disabled=false; btn.innerHTML="&#8635;&nbsp; Play again"; info.textContent=left+" play"+(left===1?"":"s")+" remaining."; }
+      else{ btn.disabled=true; btn.innerHTML="No plays remaining"; info.textContent="Choose the best answer below."; }
+    });
+  });
+}
+
+/* ---------- gap-fill grouping ----------
+   Cloze items that share a text are answered on one screen. They stay
+   separate entries in QUESTIONS so each gap keeps its own CEFR band —
+   the grouping is purely about presentation. */
+function groupAt(i){
+  const q=QUESTIONS[i];
+  if(!q || !q.cloze) return [i];
+  const id=q.cloze.id, out=[];
+  for(let k=i;k<QUESTIONS.length;k++){
+    if(QUESTIONS[k].cloze && QUESTIONS[k].cloze.id===id) out.push(k); else break;
+  }
+  return out;
 }
 
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 
 $("nextBtn").addEventListener("click",()=>{
-  if(selected===null) return;
-  answers[idx]=selected;
+  const group=groupAt(idx);
+  if(group.length>1){
+    if(!group.every(gi=>picked[gi]!==undefined)) return;
+    group.forEach(gi=>answers[gi]=picked[gi]);
+  }else{
+    if(selected===null) return;
+    answers[idx]=selected;
+  }
   try{ window.speechSynthesis && window.speechSynthesis.cancel(); }catch(_){}
-  if(idx===QUESTIONS.length-1){ finish(); } else { idx++; render(); }
+  const nextIdx=group[group.length-1]+1;
+  if(nextIdx>=QUESTIONS.length){ finish(); } else { idx=nextIdx; render(); }
 });
 
 /* ============================================================
@@ -903,7 +920,9 @@ function finish(){
   h+='<h3>What to work on next</h3><ul class="adv">'+info.advice.map(a=>'<li>'+a+'</li>').join("")+'</ul>';
 
   /* answer review */
-  h+='<details open><summary>Question-by-question review</summary><div style="margin-top:10px">';
+  /* The review is for the record, not for the screen. It is hidden in the browser
+     and only appears in the printed / saved PDF. */
+  h+='<div class="printonly"><h3>Question-by-question review</h3><div>';
   QUESTIONS.forEach((q,i)=>{
     const ok=answers[i]===q.a;
     h+='<div class="rev '+(ok?"right":"wrong")+'">'+
@@ -914,7 +933,11 @@ function finish(){
     h+='<p class="a">Your answer: <b>'+(answers[i]===null?"—":esc(q.opts[answers[i]]))+'</b>'+
        (ok?"":' &nbsp;·&nbsp; Correct answer: <b>'+esc(q.opts[q.a])+'</b>')+'</p></div>';
   });
-  h+='</div></details>';
+  h+='</div></div>';
+
+  h+='<p class="noprint" style="font-size:13px;color:var(--muted);background:var(--brand-soft);'+
+     'border-radius:8px;padding:11px 13px">A full question-by-question review is included '+
+     'if you press <em>Print / Save as PDF</em> below.</p>';
 
   h+='<p style="font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px">'+
      'Method: all '+QUESTIONS.length+' questions are tagged to a CEFR band (A1–C2), with equal numbers of '+
