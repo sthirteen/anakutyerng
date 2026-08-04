@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ANAKUT YERNG_CEFR_TEST</title>
+<title>CEFR Assessment — Anakut Yerng</title>
 
 <!-- app icon: navy #123345 with "ENG-TEST" in hot orange #FF6A00 -->
 <link rel="icon" href="favicon.ico" sizes="any">
@@ -82,6 +82,7 @@
        font-weight:700;color:var(--muted);padding:0 6px;margin:0 2px}
   .gapq{margin:0 0 16px}
   .gaplbl{font-size:12.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--accent-dark);margin:0 0 7px}
+  .gaplbl.gaplbl-q{font-size:16px;letter-spacing:0;text-transform:none;color:var(--ink);font-weight:500;line-height:1.45;margin:0 0 9px}
   .gapopts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:0}
   .opt.optsm{padding:10px 12px;font-size:14.5px}
   .gap.now{border-bottom-color:var(--accent);background:var(--accent-soft);color:var(--accent-dark);border-radius:4px 4px 0 0}
@@ -104,8 +105,8 @@
   .fallback{font-size:14px;background:#fff;border:1px dashed var(--line);border-radius:8px;padding:10px;margin:10px 0 0;text-align:left}
 
   /* admin */
-  .adminlink{font-size:12px;color:var(--muted);text-decoration:none;border-bottom:1px dotted var(--line)}
-  .adminlink:hover{color:var(--brand)}
+  .adminlink{font-size:12.5px;color:var(--accent);text-decoration:underline;font-weight:600}
+  .adminlink:hover{color:var(--accent-dark)}
   .warn{background:#fdf3e0;border-left:3px solid var(--amber);border-radius:0 8px 8px 0;padding:12px 14px;font-size:13.5px;margin:0 0 20px;color:#6b4a11}
   .atable{width:100%;border-collapse:collapse;font-size:13px}
   .atable th{position:sticky;top:0;background:#fff;cursor:pointer;white-space:nowrap;user-select:none}
@@ -198,7 +199,7 @@
 
 <!-- ================= LOGIN ================= -->
 <section id="scr-login" class="card">
-  <h1>ANAKUT YERNG_CEFR_TEST</h1>
+  <h1>CEFR ASSESSMENT — ANAKUT YERNG</h1>
   <p class="lede">A full placement test that assesses your English against the Common European Framework of Reference (CEFR), from A1 to C2.</p>
 
   <div class="facts">
@@ -227,7 +228,7 @@
     </p>
 
     <p id="privacy" style="font-size:13px;color:var(--muted);margin:12px 0 20px">
-      Your result is also sent to your teacher at Alongsiders so they can place you in the
+      Your result is also sent to your teacher at Anakut Yerng so they can place you in the
       right English class. It is not shared with anyone else.
     </p>
     <button class="btn" type="submit">Start the test</button>
@@ -276,7 +277,7 @@
   <h2 id="adminTitle">Staff sign in</h2>
 
   <div id="adminLogin">
-    <p class="lede" style="margin-bottom:18px">For Alongsiders staff only.</p>
+    <p class="lede" style="margin-bottom:18px">For Anakut Yerng staff only.</p>
     <form id="adminForm" autocomplete="off">
       <label class="fld" for="aEmail">Your work email</label>
       <input type="email" id="aEmail" placeholder="name@alongsiders.org" required>
@@ -298,16 +299,18 @@
 <!-- ================= REPORT ================= -->
 <section id="scr-report" class="card hidden">
   <div id="reportBody"></div>
-  <div class="row noprint" style="margin-top:8px">
-    <button class="btn" onclick="window.print()">Print / Save as PDF</button>
-    <button class="btn-ghost" onclick="location.reload()">Test another person</button>
+  <div class="row" style="margin-top:8px">
+    <button class="btn" id="dlBtn">Download Result</button>
+    <button class="btn-ghost" id="sendBtn">Send to Teacher</button>
+    <button class="btn-ghost" onclick="location.reload()">Take Another Test</button>
   </div>
+  <p id="btnNote" style="font-size:12.5px;color:var(--muted);margin:12px 0 0"></p>
 </section>
 
 <p class="foot noprint">
   CEFR = Common European Framework of Reference for Languages.<br>
   This is a placement assessment, not an accredited examination.<br>
-  <a href="#admin" class="adminlink" id="staffLink">Staff sign in</a>
+  <a href="#admin" class="adminlink" id="staffLink">For Staff</a>
 </p>
 </div>
 
@@ -350,13 +353,13 @@ const SHEET_URL = "";           /* <<< PASTE YOUR APPS SCRIPT URL HERE.
    ============================================================ */
 /* ---------- reading passages ---------- */
 /* ---------- reading passages ---------- */
-const P_HOURS = { title:"Village health post", text:"OPEN — Monday to Friday, 8:00 a.m. to 5:00 p.m. CLOSED — Saturday, Sunday and public holidays. For an emergency at night, telephone 012 700 700." };
-const P_CLASS = { title:"Community centre — English class", text:"The free English class starts on Monday 3 August. It runs every Monday, Wednesday and Friday, from 5:00 p.m. to 6:30 p.m. The class is for students aged 12 to 18. Please bring a notebook and a pen. There are only 25 places, so come to the office before Friday to write your name on the list." };
-const P_LAKE  = { title:"The Tonlé Sap", text:"Every year the Tonlé Sap river changes direction. In the dry season it flows south into the Mekong. But when the monsoon rains come, the Mekong rises so high that it pushes the water back the other way, and the lake grows to about five times its normal size. The flooded forest around the lake is where most of the fish lay their eggs, and this is why the lake feeds so many families. Fishers say the catch is smaller now than it was twenty years ago, and they blame the changing weather as much as the number of boats on the water." };
+const P_HOURS = { id:"HOURS", title:"Village health post", text:"OPEN — Monday to Friday, 8:00 a.m. to 5:00 p.m. CLOSED — Saturday, Sunday and public holidays. For an emergency at night, telephone 012 700 700." };
+const P_CLASS = { id:"CLASS", title:"Community centre — English class", text:"The free English class starts on Monday 3 August. It runs every Monday, Wednesday and Friday, from 5:00 p.m. to 6:30 p.m. The class is for students aged 12 to 18. Please bring a notebook and a pen. There are only 25 places, so come to the office before Friday to write your name on the list." };
+const P_LAKE  = { id:"LAKE", title:"The Tonlé Sap", text:"Every year the Tonlé Sap river changes direction. In the dry season it flows south into the Mekong. But when the monsoon rains come, the Mekong rises so high that it pushes the water back the other way, and the lake grows to about five times its normal size. The flooded forest around the lake is where most of the fish lay their eggs, and this is why the lake feeds so many families. Fishers say the catch is smaller now than it was twenty years ago, and they blame the changing weather as much as the number of boats on the water." };
 
 /* A C2 item does not need hard words. This passage uses simple language, but you
    have to read between the lines to answer it — which is what C2 reading is. */
-const P_MEETING = { title:"At the meeting", text:"Everyone at the meeting agreed that the new plan was a good idea. Nobody said a single word against it. But when the manager asked who would like to lead it, the room went quiet. One person said she was very busy until December. Another said the plan would surely work better next year. A third said he would help, as long as someone else took charge. The plan was written down, praised by everybody, and never mentioned again." };
+const P_MEETING = { id:"MEETING", title:"At the meeting", text:"Everyone at the meeting agreed that the new plan was a good idea. Nobody said a single word against it. But when the manager asked who would like to lead it, the room went quiet. One person said she was very busy until December. Another said the plan would surely work better next year. A third said he would help, as long as someone else took charge. The plan was written down, praised by everybody, and never mentioned again." };
 
 /* ---------- gap-fill texts: all four gaps are shown on one screen ---------- */
 const CLOZE_MAIL = { id:"MAIL", title:"An email to a teacher", parts:[
@@ -419,6 +422,10 @@ const QUESTIONS = [
   { level:"A2", skill:"Reading", passage:P_CLASS,
     q:"When does the English class start?",
     opts:["Monday 3 August","Friday 3 August","Monday 5 August","Wednesday 3 August"], a:0 },
+  { level:"B1", skill:"Reading", passage:P_CLASS,
+    q:"What must a student do before Friday?",
+    opts:["Put their name on the list at the office","Pay the fee for the class",
+          "Bring a photo to the first lesson","Ask a teacher to write a letter"], a:0 },
   { level:"A2", skill:"Listening", fixed:true, rate:0.88,
     audio:"I want one bus ticket to Battambang, please. The bus at half past seven, not the eight o'clock bus.",
     q:"True or false? The speaker wants the eight o'clock bus.",
@@ -429,10 +436,6 @@ const QUESTIONS = [
     opts:["will cancel","cancelled","would cancel","are cancel"], a:0 },
   { level:"B1", skill:"Vocabulary", q:"Could you ______ me a favour? Please check this letter for me.",
     opts:["do","make","give","put"], a:0 },
-  { level:"B1", skill:"Reading", passage:P_CLASS,
-    q:"What must a student do before Friday?",
-    opts:["Put their name on the list at the office","Pay the fee for the class",
-          "Bring a photo to the first lesson","Ask a teacher to write a letter"], a:0 },
   { level:"B1", skill:"Listening", rate:0.95,
     audio:"We were going to meet on Tuesday, but Dara had to see the doctor. So now we will meet on Thursday morning instead.",
     q:"When will they meet now?",
@@ -460,6 +463,12 @@ const QUESTIONS = [
           "Heavy rain falls straight into the lake and nothing else",
           "The flooded forest blocks the river and holds the water",
           "Fishers open the river so that more water can come in"], a:0 },
+  { level:"C1", skill:"Reading", passage:P_LAKE,
+    q:"What do the fishers believe about the smaller catch?",
+    opts:["Both the weather and the number of boats are to blame",
+          "The changing weather is the only cause",
+          "Too many boats is the only cause",
+          "Nobody has any idea what the cause is"], a:0 },
   { level:"B2", skill:"Listening", rate:1.0,
     audio:"The training was useful in some ways, but it was too short, and I don't think the new staff really understood the reporting forms.",
     q:"What does the speaker think about the training?",
@@ -473,12 +482,6 @@ const QUESTIONS = [
     opts:["have I attended","I have attended","did I attended","I attended"], a:0 },
   { level:"C1", skill:"Vocabulary", q:"His argument did not hold together: the more he explained, the ______ sense it made.",
     opts:["less","fewer","lesser","least"], a:0 },
-  { level:"C1", skill:"Reading", passage:P_LAKE,
-    q:"What do the fishers believe about the smaller catch?",
-    opts:["Both the weather and the number of boats are to blame",
-          "The changing weather is the only cause",
-          "Too many boats is the only cause",
-          "Nobody has any idea what the cause is"], a:0 },
   { level:"C1", skill:"Register", q:"A colleague's plan has a problem you can see. You want to raise it in a meeting without upsetting anyone. Which is best?",
     opts:["I wonder whether we've thought about where the money will come from?",
           "This won't work.",
@@ -640,11 +643,13 @@ function render(){
   }
 
   if(isGroup){
-    html+='<p class="qtext" style="font-size:16px;margin-bottom:14px">Choose the best word for each gap.</p>';
+    html+='<p class="qtext" style="font-size:16px;margin-bottom:14px">'+
+          (first.cloze ? "Choose the best word for each gap."
+                       : "Answer both questions about the text above.")+'</p>';
     group.forEach(gi=>{
       const q=QUESTIONS[gi];
-      html+='<div class="gapq"><div class="gaplbl">Gap '+q.blank+'</div>'+
-            '<div class="opts gapopts" data-gi="'+gi+'"></div></div>';
+      html+='<div class="gapq"><div class="gaplbl'+(first.cloze?'':' gaplbl-q')+'">'+esc(q.q)+'</div>'+
+            '<div class="opts'+(first.cloze?' gapopts':'')+'" data-gi="'+gi+'"></div></div>';
     });
   }else{
     html+='<div class="qtext">'+esc(first.q)+'</div><div class="opts" id="opts"></div>';
@@ -656,8 +661,8 @@ function render(){
   if(isGroup){
     group.forEach(gi=>{
       const q=QUESTIONS[gi];
-      const box=$("qbox").querySelector('.gapopts[data-gi="'+gi+'"]');
-      buildOptions(box,q,gi,true);
+      const box=$("qbox").querySelector('[data-gi="'+gi+'"]');
+      buildOptions(box,q,gi,!!first.cloze);
     });
   }else{
     buildOptions($("opts"),first,group[0],false);
@@ -666,7 +671,8 @@ function render(){
   if(first.skill==="Listening") wireAudio(first);
 
   $("hint").textContent = first.cloze ? "Answer all four gaps"
-    : (first.skill==="Listening" ? "Listen, then choose one answer" : "Choose one answer");
+    : (isGroup ? "Answer both questions"
+    : (first.skill==="Listening" ? "Listen, then choose one answer" : "Choose one answer"));
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
@@ -720,12 +726,19 @@ function wireAudio(q){
    Cloze items that share a text are answered on one screen. They stay
    separate entries in QUESTIONS so each gap keeps its own CEFR band —
    the grouping is purely about presentation. */
+function groupKey(q){
+  if(!q) return null;
+  if(q.cloze)   return "cloze:"+q.cloze.id;
+  if(q.passage) return "passage:"+q.passage.id;
+  return null;                       /* everything else stands alone */
+}
+
 function groupAt(i){
-  const q=QUESTIONS[i];
-  if(!q || !q.cloze) return [i];
-  const id=q.cloze.id, out=[];
+  const key=groupKey(QUESTIONS[i]);
+  if(!key) return [i];
+  const out=[];
   for(let k=i;k<QUESTIONS.length;k++){
-    if(QUESTIONS[k].cloze && QUESTIONS[k].cloze.id===id) out.push(k); else break;
+    if(groupKey(QUESTIONS[k])===key) out.push(k); else break;
   }
   return out;
 }
@@ -827,25 +840,38 @@ function sendResult(rec){
   return Promise.allSettled(jobs);
 }
 
+/* If the automatic send already worked, the button is not needed — say so
+   quietly. If it failed, make the button the obvious next thing to press. */
+function markSendButton(){
+  const b=$("sendBtn"); if(!b) return;
+  if(sendOk){
+    b.textContent="Send to Teacher again";
+    b.title="Your result has already been sent automatically.";
+  }else{
+    b.className="btn";
+    b.textContent="Send to Teacher";
+  }
+}
+
 function showSendStatus(results){
   const el=$("sendStatus");
   if(!el) return;
   if(!results || !results.length){
     el.className="note"; el.style.borderLeftColor="var(--muted)";
-    el.innerHTML="<strong>Not sent.</strong> Result delivery is switched off. "+
-                 "Please press <em>Print / Save as PDF</em> and send the file to your teacher.";
+    el.innerHTML="<strong>Not sent automatically.</strong> Sending is switched off in this copy of the test. "+
+                 "Please press <em>Download Result</em> below and send the file to your teacher.";
     return;
   }
   const ok=results.some(x=>x.status==="fulfilled");
   if(ok){
     el.className="note";
     el.innerHTML="<strong>Result sent.</strong> A copy is on its way to "+(takerEmail?"<em>"+esc(takerEmail)+"</em>":"your email")+
-                 ", and your teacher has been notified. You can also save your own copy with the "+
-                 "<em>Print / Save as PDF</em> button below.";
+                 ", and your teacher has been notified. You can also keep your own copy with the "+
+                 "<em>Download Result</em> button below.";
   }else{
     el.className="note"; el.style.borderLeftColor="var(--red)";
-    el.innerHTML="<strong>Could not send your result</strong> — your internet may be off. "+
-                 "Please press <em>Print / Save as PDF</em> below and send the file to your teacher.";
+    el.innerHTML="<strong>Your result has not reached your teacher yet</strong> — your internet may be off. "+
+                 "Please press <em>Send to Teacher</em> below when you have a connection.";
   }
 }
 
@@ -859,8 +885,8 @@ function finish(){
 
   let h="";
   h+='<div class="cert">'+
-     '<div class="cert-top"><div class="cert-org">Alongsiders &nbsp;·&nbsp; Shalom Valley</div>'+
-     '<div class="cert-ttl">ANAKUT YERNG_CEFR_TEST &mdash; Statement of Result</div></div>'+
+     '<div class="cert-top"><div class="cert-org">Alongsiders Organization</div>'+
+     '<div class="cert-ttl">CEFR Assessment &mdash; Anakut Yerng</div>'+'<div style="font-size:12.5px;opacity:.8;margin-top:3px">Statement of Result</div></div>'+
      '<div class="cert-body">'+
      '<div class="cert-lbl">This is to certify that</div>'+
      '<div class="cert-name">'+esc(taker)+'</div>'+
@@ -920,8 +946,10 @@ function finish(){
   h+='<h3>What to work on next</h3><ul class="adv">'+info.advice.map(a=>'<li>'+a+'</li>').join("")+'</ul>';
 
   /* answer review */
-  /* The review is for the record, not for the screen. It is hidden in the browser
-     and only appears in the printed / saved PDF. */
+  /* The review is not rendered into the page at all any more — it is drawn
+     into the downloaded PDF instead. Kept out of the DOM so a curious test
+     taker cannot reveal it with the browser inspector. */
+  if(false){
   h+='<div class="printonly"><h3>Question-by-question review</h3><div>';
   QUESTIONS.forEach((q,i)=>{
     const ok=answers[i]===q.a;
@@ -934,10 +962,11 @@ function finish(){
        (ok?"":' &nbsp;·&nbsp; Correct answer: <b>'+esc(q.opts[q.a])+'</b>')+'</p></div>';
   });
   h+='</div></div>';
+  }
 
-  h+='<p class="noprint" style="font-size:13px;color:var(--muted);background:var(--brand-soft);'+
+  h+='<p style="font-size:13px;color:var(--muted);background:var(--brand-soft);'+
      'border-radius:8px;padding:11px 13px">A full question-by-question review is included '+
-     'if you press <em>Print / Save as PDF</em> below.</p>';
+     'in the PDF you get from <em>Download Result</em> below.</p>';
 
   h+='<p style="font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px">'+
      'Method: all '+QUESTIONS.length+' questions are tagged to a CEFR band (A1–C2), with equal numbers of '+
@@ -952,13 +981,242 @@ function finish(){
   $("scr-report").classList.remove("hidden");
   window.scrollTo({top:0});
 
-  /* the report is already on screen before this runs, so a slow or failed
-     send can never stop someone seeing their own result */
+  /* keep everything the result buttons need */
+  lastResult=r; lastSecs=secs; lastRecord=buildRecord(r,secs);
+  $("dlBtn").onclick=downloadResultPdf;
+  $("sendBtn").onclick=sendToTeacher;
+
+  /* The result is sent automatically here — the student does not have to do
+     anything. "Send to Teacher" exists only for the case where this fails,
+     which in practice means they had no internet when they finished. */
   try{
-    sendResult(buildRecord(r,secs)).then(showSendStatus).catch(()=>showSendStatus([]));
-  }catch(_){ showSendStatus([]); }
+    sendResult(lastRecord).then(res=>{
+      sendOk = res.length && res.some(x=>x.status==="fulfilled");
+      showSendStatus(res);
+      markSendButton();
+    }).catch(()=>{ showSendStatus([]); markSendButton(); });
+  }catch(_){ showSendStatus([]); markSendButton(); }
 }
 
+
+/* ============================================================
+   DOWNLOAD RESULT  —  a real PDF, drawn rather than screenshotted
+   ------------------------------------------------------------
+   jsPDF is fetched only when the button is pressed, so the test
+   itself still loads and runs with no internet. If the fetch
+   fails we say so plainly instead of failing silently.
+
+   The layout is drawn with explicit coordinates rather than
+   converted from HTML: the text stays sharp and selectable and
+   the file stays small (a screenshot-based PDF of this page runs
+   to several megabytes and cannot be searched).
+   ============================================================ */
+let lastResult=null, lastSecs=0, lastRecord=null, sendOk=false;
+
+function ensureJsPdf(){
+  if(window.jspdf && window.jspdf.jsPDF) return Promise.resolve();
+  return new Promise((res,rej)=>{
+    const sc=document.createElement("script");
+    sc.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    sc.onload=()=>res();
+    sc.onerror=()=>rej(new Error("offline"));
+    document.head.appendChild(sc);
+  });
+}
+
+const NAVY=[18,51,69], ORANGE=[255,106,0], MUTED=[95,115,133], INK=[16,31,43], LINE=[223,230,236];
+
+async function downloadResultPdf(){
+  const btn=$("dlBtn"), note=$("btnNote");
+  if(!lastResult) return;
+  const label=btn.textContent;
+  btn.disabled=true; btn.textContent="Preparing your PDF…";
+  try{
+    await ensureJsPdf();
+    buildPdf().save(pdfFileName());
+    btn.disabled=false; btn.textContent=label;
+    note.style.color="var(--muted)";
+    note.textContent="Saved to your downloads. You can send this file to your teacher.";
+  }catch(err){
+    btn.disabled=false; btn.textContent=label;
+    note.style.color="var(--red)";
+    note.textContent="The download needs an internet connection. Please connect and try again, "+
+                     "or take a screenshot of this page.";
+  }
+}
+
+function pdfFileName(){
+  const safe=(taker||"result").replace(/[^A-Za-z0-9 ]/g,"").trim().replace(/\s+/g,"-").toLowerCase();
+  return "cefr-result-"+(safe||"result")+".pdf";
+}
+
+function buildPdf(){
+  const { jsPDF }=window.jspdf;
+  const d=new jsPDF({unit:"pt",format:"a4"});
+  const W=595, M=42, CW=W-M*2;
+  const r=lastResult, info=BAND_INFO[r.level];
+  let y=M;
+
+  /* ---------- certificate ---------- */
+  d.setFillColor(...NAVY); d.rect(M,y,CW,58,"F");
+  d.setTextColor(255,255,255);
+  d.setFont("helvetica","normal"); d.setFontSize(8.5);
+  d.text("ALONGSIDERS ORGANIZATION", W/2, y+19, {align:"center", charSpace:1.6});
+  d.setFont("helvetica","bold"); d.setFontSize(13);
+  d.text("CEFR Assessment — Anakut Yerng", W/2, y+38, {align:"center"});
+  d.setFont("helvetica","normal"); d.setFontSize(8.5);
+  d.text("Statement of Result", W/2, y+50, {align:"center"});
+  y+=58;
+
+  d.setDrawColor(...NAVY); d.setLineWidth(1.4);
+  const boxTop=y;
+
+  d.setTextColor(...MUTED); d.setFontSize(8); d.setFont("helvetica","normal");
+  y+=26; d.text("THIS IS TO CERTIFY THAT", W/2, y, {align:"center", charSpace:1.4});
+  d.setTextColor(...INK); d.setFont("helvetica","bold"); d.setFontSize(19);
+  y+=24; d.text(taker, W/2, y, {align:"center"});
+  d.setTextColor(...MUTED); d.setFont("helvetica","normal"); d.setFontSize(8);
+  y+=22; d.text("HAS BEEN ASSESSED AT CEFR LEVEL", W/2, y, {align:"center", charSpace:1.4});
+  d.setTextColor(...ORANGE); d.setFont("helvetica","bold"); d.setFontSize(46);
+  y+=42; d.text(r.level, W/2, y, {align:"center"});
+  d.setTextColor(...INK); d.setFontSize(13);
+  y+=20; d.text(info.name, W/2, y, {align:"center"});
+  d.setTextColor(...MUTED); d.setFont("helvetica","normal"); d.setFontSize(9.5);
+  y+=16;
+  d.splitTextToSize(info.desc, CW-120).forEach(l=>{ d.text(l, W/2, y, {align:"center"}); y+=13; });
+
+  /* three facts */
+  y+=10;
+  d.setDrawColor(...LINE); d.setLineWidth(.7); d.line(M+18,y,W-M-18,y);
+  const facts=[[r.total+" / "+QUESTIONS.length,"QUESTIONS CORRECT"],
+               [Math.round(r.total/QUESTIONS.length*100)+"%","OVERALL SCORE"],
+               [Math.floor(lastSecs/60)+"m "+String(lastSecs%60).padStart(2,"0")+"s","TIME TAKEN"]];
+  const colW=(CW-36)/3;
+  facts.forEach((f,i)=>{
+    const cx=M+18+colW*i+colW/2;
+    d.setTextColor(...INK); d.setFont("helvetica","bold"); d.setFontSize(12);
+    d.text(f[0], cx, y+20, {align:"center"});
+    d.setTextColor(...MUTED); d.setFont("helvetica","normal"); d.setFontSize(7);
+    d.text(f[1], cx, y+31, {align:"center", charSpace:.8});
+    if(i<2){ d.setDrawColor(...LINE); d.line(M+18+colW*(i+1), y+6, M+18+colW*(i+1), y+34); }
+  });
+  y+=44;
+  d.setDrawColor(...NAVY); d.setLineWidth(1.4); d.rect(M,boxTop,CW,y-boxTop);
+
+  /* ---------- meta line ---------- */
+  y+=16; d.setTextColor(...MUTED); d.setFont("helvetica","normal"); d.setFontSize(8.5);
+  d.text("Issued "+new Date().toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"})+
+         "   ·   "+taker+(takerEmail?"   ·   "+takerEmail:""), M, y);
+
+  /* ---------- can-do ---------- */
+  y+=24; y=pdfHeading(d,"AT THIS LEVEL YOU CAN TYPICALLY",M,y);
+  d.setTextColor(...INK); d.setFont("helvetica","normal"); d.setFontSize(9.5);
+  info.cando.forEach(c=>{
+    d.splitTextToSize("•  "+c, CW-10).forEach((l,k)=>{ d.text(l, M+(k?10:0), y); y+=13; });
+    y+=2;
+  });
+
+  /* ---------- by skill ---------- */
+  y+=12; y=pdfHeading(d,"PERFORMANCE BY SKILL",M,y);
+  ["Grammar","Vocabulary","Cloze","Reading","Listening","Error correction","Register","Pictures"].forEach(k=>{
+    const v=r.perSkill[k]; if(!v) return;
+    d.setTextColor(...INK); d.setFont("helvetica","normal"); d.setFontSize(9.5);
+    d.text(k, M, y+8);
+    const bx=M+120, bw=CW-190;
+    d.setFillColor(231,236,240); d.rect(bx,y+2,bw,7,"F");
+    d.setFillColor(...NAVY); d.rect(bx,y+2,bw*(v.c/v.n),7,"F");
+    d.setTextColor(...MUTED); d.text(v.c+"/"+v.n, W-M, y+8, {align:"right"});
+    y+=17;
+  });
+
+  /* ---------- by band ---------- */
+  y+=12; y=pdfHeading(d,"PERFORMANCE BY CEFR BAND",M,y);
+  d.setFontSize(7.5); d.setTextColor(...MUTED);
+  d.text("BAND",M,y); d.text("LEVEL",M+60,y); d.text("CORRECT",M+250,y); d.text("RESULT",W-M,y,{align:"right"});
+  y+=5; d.setDrawColor(...LINE); d.line(M,y,W-M,y); y+=13;
+  BANDS.forEach(b=>{
+    const v=r.perBand[b], pass=v.c>=r.need(b);
+    d.setFontSize(9.5); d.setFont("helvetica","bold"); d.setTextColor(...INK); d.text(b,M,y);
+    d.setFont("helvetica","normal"); d.text(BAND_INFO[b].name,M+60,y);
+    d.text(v.c+" / "+v.n,M+250,y);
+    d.setTextColor(...(pass?[44,122,75]:(v.c>0?[169,116,26]:[179,66,58])));
+    d.text(pass?"Mastered":(v.c>0?"Partial":"Not yet"),W-M,y,{align:"right"});
+    y+=6; d.setDrawColor(...LINE); d.line(M,y,W-M,y); y+=13;
+  });
+
+  /* ---------- what to work on ---------- */
+  y+=8; y=pdfHeading(d,"WHAT TO WORK ON NEXT",M,y);
+  d.setTextColor(...INK); d.setFont("helvetica","normal"); d.setFontSize(9.5);
+  info.advice.forEach(a=>{
+    const plain=a.replace(/<[^>]+>/g,"");
+    d.splitTextToSize("•  "+plain, CW-10).forEach((l,k)=>{ d.text(l, M+(k?10:0), y); y+=13; });
+    y+=2;
+  });
+
+  /* ---------- review, on its own page(s) ---------- */
+  d.addPage(); y=M;
+  d.setFillColor(...NAVY); d.rect(M,y,CW,30,"F");
+  d.setTextColor(255,255,255); d.setFont("helvetica","bold"); d.setFontSize(11);
+  d.text("Question-by-question review",M+12,y+19);
+  y+=46;
+  d.setFontSize(8.5);
+  QUESTIONS.forEach((q,i)=>{
+    const ok=answers[i]===q.a;
+    const qtext=(q.cloze? q.cloze.title+" — "+q.q : (q.passage? q.passage.title+" — "+q.q : q.q));
+    const lines=d.splitTextToSize((i+1)+". "+qtext, CW-70);
+    const blockH=lines.length*11 + 24 + (q.skill==="Listening"?11:0);
+    if(y+blockH > 800){ d.addPage(); y=M; }
+    d.setDrawColor(...(ok?[44,122,75]:[179,66,58])); d.setLineWidth(2);
+    d.line(M,y-8,M,y+blockH-16);
+    d.setTextColor(...INK); d.setFont("helvetica","bold");
+    lines.forEach(l=>{ d.text(l,M+9,y); y+=11; });
+    d.setFont("helvetica","normal"); d.setTextColor(...MUTED); d.setFontSize(7.5);
+    d.text(q.level+"  ·  "+(ok?"correct":"incorrect"), W-M, y-11*lines.length, {align:"right"});
+    d.setFontSize(8.5);
+    if(q.skill==="Listening"){
+      d.splitTextToSize('Recording: "'+q.audio+'"', CW-20).forEach(l=>{ d.text(l,M+9,y); y+=11; });
+    }
+    d.text("Your answer: "+(answers[i]==null?"—":q.opts[answers[i]])+
+           (ok?"":"     Correct answer: "+q.opts[q.a]), M+9, y);
+    y+=22;
+  });
+
+  /* ---------- footer note on every page ---------- */
+  const pages=d.getNumberOfPages();
+  for(let pg=1;pg<=pages;pg++){
+    d.setPage(pg);
+    d.setTextColor(...MUTED); d.setFont("helvetica","normal"); d.setFontSize(7);
+    d.text("CEFR Assessment — Anakut Yerng   ·   placement assessment for teaching purposes, "+
+           "not an accredited examination   ·   page "+pg+" of "+pages, W/2, 820, {align:"center"});
+  }
+  return d;
+}
+
+function pdfHeading(d,txt,x,y){
+  d.setFillColor(...ORANGE); d.rect(x,y-8,2.5,11,"F");
+  d.setTextColor(...MUTED); d.setFont("helvetica","bold"); d.setFontSize(8);
+  d.text(txt,x+8,y,{charSpace:1.1});
+  return y+18;
+}
+
+/* ---------- Send to Teacher ---------- */
+async function sendToTeacher(){
+  const btn=$("sendBtn"), note=$("btnNote");
+  if(!lastRecord) return;
+  const label=btn.textContent;
+  btn.disabled=true; btn.textContent="Sending…";
+  let results=[];
+  try{ results=await sendResult(lastRecord); }catch(_){ results=[{status:"rejected"}]; }
+  const ok = results.length && results.some(x=>x.status==="fulfilled");
+  showSendStatus(results);
+  btn.disabled=false; btn.textContent=label;
+  note.style.color = ok ? "var(--muted)" : "var(--red)";
+  note.textContent = ok
+    ? "Sent. Your teacher has your result."
+    : (results.length
+        ? "Still could not send. Please check your internet, or press Download Result and send the file."
+        : "Sending is switched off in this copy of the test. Please use Download Result instead.");
+}
 
 /* ============================================================
    STAFF ADMIN
