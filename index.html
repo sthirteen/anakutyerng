@@ -124,6 +124,10 @@
   .fpill:hover{border-color:var(--brand);color:var(--brand)}
   .fpill.on{background:var(--brand);border-color:var(--brand);color:#fff}
   .fpill.on strong{color:#fff}
+  .admin-top{display:flex;justify-content:flex-end;gap:8px;margin:-6px 0 12px}
+  .iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;color:var(--muted)}
+  .iconbtn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
+  .iconbtn svg{width:18px;height:18px}
 
   /* certificate */
   .cert{border:2px solid var(--brand);border-radius:12px;padding:0;margin:0 0 24px;overflow:hidden}
@@ -1373,16 +1377,20 @@ function renderResults(){
   const dist={};
   ROWS.forEach(r=>dist[r.level]=(dist[r.level]||0)+1);
 
-  let h='<div class="dist">'+
+  const icoReload='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
+  const icoOut='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
+
+  let h='<div class="admin-top">'+
+        '<button class="iconbtn" id="aReload" title="Reload" aria-label="Reload">'+icoReload+'</button>'+
+        '<button class="iconbtn" id="aOut" title="Sign out" aria-label="Sign out">'+icoOut+'</button></div>'+
+        '<div class="dist">'+
         '<button class="fpill'+(!levelFilter?' on':'')+'" data-lv="">All <strong>'+ROWS.length+'</strong></button>'+
         BANDS.map(b=>'<button class="fpill'+(levelFilter===b?' on':'')+'" data-lv="'+b+'">'+b+' <strong>'+(dist[b]||0)+'</strong></button>').join('')+'</div>';
 
   h+='<div class="adminbar">'+
      '<input type="text" id="aSearch" placeholder="Search by name…" value="'+esc(q)+'">'+
      '<button class="btn-ghost" id="aCsv">Download CSV</button>'+
-     '<button class="btn-ghost" id="aReload">Reload</button>'+
-     '<button class="btn-ghost" id="aBackTest">Back to test</button>'+
-     '<button class="btn-ghost" id="aOut">Sign out</button></div>';
+     '<button class="btn-ghost" id="aBackTest">Back to test</button></div>';
 
   if(!rows.length){
     h+='<p class="lede">No results match.</p>';
