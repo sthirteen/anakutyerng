@@ -207,8 +207,8 @@
   <p class="lede">A full placement test that assesses your English against the Common European Framework of Reference (CEFR), from A1 to C2.</p>
 
   <div class="facts">
-    <div class="fact"><b>36</b><span>questions</span></div>
-    <div class="fact"><b>~15 min</b><span>to complete</span></div>
+    <div class="fact"><b>30</b><span>questions</span></div>
+    <div class="fact"><b>~12 min</b><span>to complete</span></div>
     <div class="fact"><b>A1–C2</b><span>CEFR result</span></div>
     <div class="fact"><b>Certificate</b><span>on completion</span></div>
   </div>
@@ -218,17 +218,17 @@
     error correction and choosing the right tone for a situation. Four questions are listening questions — your
     device will read a short recording aloud, so please use headphones or turn the volume up. You may replay
     each recording up to 3 times. There is no going back once you answer, so read each question carefully.
-    Set aside about 15 minutes and finish in one sitting.
+    Set aside about 12 minutes and finish in one sitting.
   </div>
 
   <form id="loginForm" autocomplete="off">
     <label class="fld" for="name">Your full name</label>
     <input type="text" id="name" placeholder="e.g. Sophea Chan" required>
 
-    <label class="fld" for="email" style="margin-top:14px">Your email address</label>
-    <input type="email" id="email" placeholder="e.g. sophea@example.com" required>
+    <label class="fld" for="email" style="margin-top:14px">Your email address <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+    <input type="email" id="email" placeholder="e.g. sophea@example.com">
     <p id="emailNote" style="font-size:13px;color:var(--muted);margin:6px 0 0">
-      We send a copy of your result to this address, so please check it is correct.
+      If you give an email, we send a copy of your result there. You can leave it blank.
     </p>
 
     <p id="privacy" style="font-size:13px;color:var(--muted);margin:12px 0 20px">
@@ -347,7 +347,7 @@ const SHEET_URL = "https://script.google.com/macros/s/AKfycbzb0wB-P_CaD6e3S69qrm
    QUESTION BANK — 36 items, exactly 6 per band A1-C2
    Equal bands so every level is measured with the same confidence;
    the mastery threshold is a consistent 4 of 6. Cut from 53 to hold
-   the test to about 15 minutes without weakening any band.
+   the test to about 12 minutes without weakening any band.
 
    Item types beyond the simple version:
      Cloze            — connected text; all four gaps of a text are
@@ -402,7 +402,7 @@ const QUESTIONS = [
   { level:"A1", skill:"Reading", passage:P_HOURS,
     q:"When is the health post closed?",
     opts:["Saturday and Sunday","Monday and Friday","Every afternoon","Only at night"], a:0 },
-  { level:"A1", skill:"Listening", fixed:true, rate:0.82,
+  { level:"A1", skill:"Listening", fixed:true, rate:0.72,
     audio:"The market opens at six in the morning and closes at five in the afternoon.",
     q:"True or false? The market closes at five in the afternoon.",
     opts:["True","False"], a:0 },
@@ -431,7 +431,7 @@ const QUESTIONS = [
     q:"What must a student do before Friday?",
     opts:["Put their name on the list at the office","Pay the fee for the class",
           "Bring a photo to the first lesson","Ask a teacher to write a letter"], a:0 },
-  { level:"A2", skill:"Listening", fixed:true, rate:0.88,
+  { level:"A2", skill:"Listening", fixed:true, rate:0.78,
     audio:"I want one bus ticket to Battambang, please. The bus at half past seven, not the eight o'clock bus.",
     q:"True or false? The speaker wants the eight o'clock bus.",
     opts:["True","False"], a:1 },
@@ -441,20 +441,15 @@ const QUESTIONS = [
     opts:["will cancel","cancelled","would cancel","are cancel"], a:0 },
   { level:"B1", skill:"Vocabulary", q:"Could you ______ me a favour? Please check this letter for me.",
     opts:["do","make","give","put"], a:0 },
-  { level:"B1", skill:"Listening", rate:0.95,
+  { level:"B1", skill:"Listening", rate:0.85,
     audio:"We were going to meet on Tuesday, but Dara had to see the doctor. So now we will meet on Thursday morning instead.",
     q:"When will they meet now?",
     opts:["Thursday morning","Tuesday morning","Thursday afternoon","Tuesday afternoon"], a:0 },
 
-  /* ==================== B2 (6) ==================== */
+  /* ==================== B2 (5) ==================== */
   { level:"B2", skill:"Grammar", q:"By the time we arrived at the conference, the ceremony ______.",
     opts:["had already finished","has already finished","already finishes","was already finish"], a:0 },
-  { level:"B2", skill:"Error correction", q:"Which sentence is correct?",
-    opts:["Not only did he arrive late, but he also forgot the report.",
-          "Not only he arrived late, but he also forgot the report.",
-          "Not only did he arrived late, but he also forgot the report.",
-          "Not only arrived he late, but he also forgot the report."], a:0 },
-  { level:"B2", skill:"Cloze", cloze:CLOZE_WORK, blank:1,
+{ level:"B2", skill:"Cloze", cloze:CLOZE_WORK, blank:1,
     q:"Gap 1", opts:["on","in","at","by"], a:0 },
   { level:"B2", skill:"Cloze", cloze:CLOZE_WORK, blank:2,
     q:"Gap 2", opts:["than","then","that","as"], a:0 },
@@ -474,7 +469,7 @@ const QUESTIONS = [
           "The changing weather is the only cause",
           "Too many boats is the only cause",
           "Nobody has any idea what the cause is"], a:0 },
-  { level:"B2", skill:"Listening", rate:1.0,
+  { level:"B2", skill:"Listening", rate:0.9,
     audio:"The training was useful in some ways, but it was too short, and I don't think the new staff really understood the reporting forms.",
     q:"What does the speaker think about the training?",
     opts:["It had some value, but it was not enough",
@@ -482,40 +477,23 @@ const QUESTIONS = [
           "It was a complete waste of time",
           "The forms were clear but the trainer was poor"], a:0 },
 
-  /* ==================== C1 (6) ==================== */
+  /* ==================== C1 (4) ==================== */
   { level:"C1", skill:"Grammar", q:"Rarely ______ such a well-organised training course.",
     opts:["have I attended","I have attended","did I attended","I attended"], a:0 },
-  { level:"C1", skill:"Vocabulary", q:"His argument did not hold together: the more he explained, the ______ sense it made.",
-    opts:["less","fewer","lesser","least"], a:0 },
-  { level:"C1", skill:"Register", q:"A colleague's plan has a problem you can see. You want to raise it in a meeting without upsetting anyone. Which is best?",
-    opts:["I wonder whether we've thought about where the money will come from?",
-          "This won't work.",
-          "You've clearly forgotten about the money.",
-          "I'm afraid your plan has a serious fault in it."], a:0 },
-
-  /* ==================== C2 (6) ==================== */
+/* ==================== C2 (3) ==================== */
   { level:"C2", skill:"Grammar", q:"Had I known about the flood, I ______ my journey quite differently.",
     opts:["would have planned","would plan","had planned","will have planned"], a:0 },
-  { level:"C2", skill:"Grammar", q:"______ the delay, the shipment would have arrived on Tuesday.",
-    opts:["But for","Except for","Apart from","Unless"], a:0 },
-  { level:"C2", skill:"Error correction", q:"Which sentence is correct?",
+{ level:"C2", skill:"Error correction", q:"Which sentence is correct?",
     opts:["Seldom has a report been so widely misunderstood.",
           "Seldom a report has been so widely misunderstood.",
           "Seldom has been a report so widely misunderstood.",
           "Seldom did a report has been so widely misunderstood."], a:0 },
-  { level:"C2", skill:"Vocabulary", q:"The minister's answer was deliberately ______, because he did not want to promise anything.",
-    opts:["vague","vast","vain","valid"], a:0 },
-  { level:"C2", skill:"Reading", passage:P_MEETING,
+{ level:"C2", skill:"Reading", passage:P_MEETING,
     q:"What does the writer want us to understand about the meeting?",
     opts:["The team did not really support the plan, even though nobody said so",
           "The team supported the plan but had no time for it this year",
           "The manager did not want to lead the plan herself",
           "The plan failed because it was written down badly"], a:0 },
-  { level:"C2", skill:"Register", q:"You must say no to a funder's request, but you want to keep a warm relationship. Which is best?",
-    opts:["We're not able to take this on right now, but we'd love to look at it again next year.",
-          "Unfortunately this is not possible. Please do not ask again.",
-          "We cannot do this, as we have already told you more than once.",
-          "It is with the deepest regret that we find ourselves obliged to refuse your esteemed request."], a:0 }
 ];
 
 /* ---- CEFR band metadata ---- */
@@ -569,12 +547,13 @@ $("loginForm").addEventListener("submit",e=>{
   const v=$("name").value.trim();
   if(!v){ $("name").focus(); return; }
   const em=$("email").value.trim();
-  /* deliberately forgiving: enough to catch a typo, not so strict it locks
-     anyone out over an unusual but valid address */
-  if(!em || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)){
+  /* Email is optional. Only if the student typed something do we sanity-check it,
+     so a typo doesn't silently send their result nowhere. Blank is fine — they
+     just won't get an emailed copy; the teacher still gets the result. */
+  if(em && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)){
     $("email").focus();
-    $("emailNote").innerHTML="<strong style='color:var(--red)'>Please check your email address "+
-      "— we need it to send you your result.</strong>";
+    $("emailNote").innerHTML="<strong style='color:var(--red)'>That email doesn't look right. "+
+      "Please fix it, or leave it blank.</strong>";
     return;
   }
   taker=v; takerEmail=em;
@@ -599,15 +578,36 @@ function pickVoice(){
   return vs.find(v=>/en[-_]GB/i.test(v.lang)) || vs.find(v=>/en[-_]US/i.test(v.lang))
       || vs.find(v=>/^en/i.test(v.lang)) || null;
 }
-function speak(text,rate,onEnd){
-  if(!window.speechSynthesis){ onEnd&&onEnd(); return false; }
-  window.speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text);
-  u.lang="en-GB"; u.rate=rate||0.95; u.pitch=1;
-  const v=pickVoice(); if(v) u.voice=v;
-  u.onend=()=>onEnd&&onEnd();
-  u.onerror=()=>onEnd&&onEnd();
-  window.speechSynthesis.speak(u);
+/* Phones (esp. Android Chrome) often load voices asynchronously and report an
+   empty list on first call. Wait briefly for them, then speak. onStart fires
+   when audio actually begins; onFail fires if nothing starts (no voice, or the
+   phone is on silent) so the caller can offer a fallback. */
+function speak(text, rate, onEnd, onStart, onFail){
+  if(!window.speechSynthesis){ onFail&&onFail(); return false; }
+  const synth=window.speechSynthesis;
+  synth.cancel();
+
+  function go(){
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang="en-GB"; u.rate=rate||0.85; u.pitch=1;
+    const v=pickVoice(); if(v) u.voice=v;
+    let started=false;
+    u.onstart=()=>{ started=true; onStart&&onStart(); };
+    u.onend=()=>onEnd&&onEnd();
+    u.onerror=()=>{ if(!started){ onFail&&onFail(); } else { onEnd&&onEnd(); } };
+    synth.speak(u);
+    /* if speech hasn't begun within 1.6s, treat it as silent/failed */
+    setTimeout(()=>{ if(!started && !synth.speaking){ onFail&&onFail(); } }, 1600);
+  }
+
+  if((synth.getVoices()||[]).length){ go(); }
+  else {
+    /* voices not ready yet — wait for them, but don't hang forever */
+    let done=false;
+    const run=()=>{ if(done) return; done=true; go(); };
+    synth.addEventListener && synth.addEventListener("voiceschanged", run, {once:true});
+    setTimeout(run, 500);
+  }
   return true;
 }
 
@@ -667,7 +667,7 @@ function render(){
     group.forEach(gi=>{
       const q=QUESTIONS[gi];
       const box=$("qbox").querySelector('[data-gi="'+gi+'"]');
-      buildOptions(box,q,gi,!!first.cloze);
+      buildOptions(box,q,gi,true);
     });
   }else{
     buildOptions($("opts"),first,group[0],false);
@@ -709,20 +709,44 @@ function refreshNext(){
 }
 
 function wireAudio(q){
-  const btn=$("playBtn"), info=$("playInfo");
+  const btn=$("playBtn"), info=$("playInfo"), fb=$("fb");
+
+  function revealTranscript(){
+    fb.classList.remove("hidden");
+    fb.innerHTML="<b>The words being said:</b><br>"+esc(q.audio);
+  }
+
   if(!window.speechSynthesis){
     btn.disabled=true; btn.textContent="Audio not supported on this browser";
-    const fb=$("fb"); fb.classList.remove("hidden");
-    fb.innerHTML="<b>Transcript (audio unavailable):</b><br>"+esc(q.audio);
+    revealTranscript();
+    return;
   }
+
+  /* Always offer a way out for phones on silent: a small link under the button. */
+  info.innerHTML='You may play it up to 3 times. '+
+    '<a href="#" id="cantHear" style="color:var(--accent);text-decoration:underline">Can’t hear it?</a>';
+  const wireCantHear=()=>{ const l=$("cantHear"); if(l) l.addEventListener("click",e=>{e.preventDefault();revealTranscript();}); };
+  wireCantHear();
+
   btn.addEventListener("click",()=>{
     if(plays[idx]>=3) return;
     plays[idx]++;
     btn.disabled=true; btn.innerHTML="&#9835;&nbsp; Playing&hellip;";
-    speak(q.audio,q.rate,()=>{
+    const afterPlay=()=>{
       const left=3-plays[idx];
-      if(left>0){ btn.disabled=false; btn.innerHTML="&#8635;&nbsp; Play again"; info.textContent=left+" play"+(left===1?"":"s")+" remaining."; }
-      else{ btn.disabled=true; btn.innerHTML="No plays remaining"; info.textContent="Choose the best answer below."; }
+      if(left>0){ btn.disabled=false; btn.innerHTML="&#8635;&nbsp; Play again"; }
+      else{ btn.disabled=true; btn.innerHTML="No plays remaining"; }
+      info.innerHTML=(left>0? left+" play"+(left===1?"":"s")+" remaining. " : "")+
+        '<a href="#" id="cantHear" style="color:var(--accent);text-decoration:underline">Can’t hear it?</a>';
+      wireCantHear();
+    };
+    speak(q.audio, q.rate, afterPlay, null, ()=>{
+      /* nothing came out — most often the phone is on silent or has no voice */
+      afterPlay();
+      info.innerHTML='<span style="color:var(--red)">No sound? Turn your volume up and check the '+
+        'silent switch, then play again — or </span>'+
+        '<a href="#" id="cantHear" style="color:var(--accent);text-decoration:underline">read the words</a>.';
+      wireCantHear();
     });
   });
 }
@@ -870,9 +894,9 @@ function showSendStatus(results){
   const ok=results.some(x=>x.status==="fulfilled");
   if(ok){
     el.className="note";
-    el.innerHTML="<strong>Result sent.</strong> A copy is on its way to "+(takerEmail?"<em>"+esc(takerEmail)+"</em>":"your email")+
-                 ", and your teacher has been notified. You can also keep your own copy with the "+
-                 "<em>Download Result</em> button below.";
+    el.innerHTML="<strong>Result sent to your teacher.</strong> "+
+                 (takerEmail?"A copy is also on its way to <em>"+esc(takerEmail)+"</em>. ":"")+
+                 "You can keep your own copy with the <em>Download Result</em> button below.";
   }else{
     el.className="note"; el.style.borderLeftColor="var(--red)";
     el.innerHTML="<strong>Your result has not reached your teacher yet</strong> — your internet may be off. "+
@@ -890,8 +914,8 @@ function finish(){
 
   let h="";
   h+='<div class="cert">'+
-     '<div class="cert-top"><img class="cert-rabbit" alt="" src="'+CERT_RABBIT+'"><div class="cert-org">Alongsiders Organization</div>'+
-     '<div class="cert-ttl">CEFR Assessment &mdash; Anakut Yerng</div>'+'<div style="font-size:12.5px;opacity:.8;margin-top:3px">Statement of Result</div></div>'+
+     '<div class="cert-top"><img class="cert-rabbit" alt="" src="'+CERT_RABBIT+'"><div class="cert-org">ANAKUT YERNG</div>'+
+     '<div class="cert-ttl">CEFR Assessment</div>'+'<div style="font-size:12.5px;opacity:.8;margin-top:3px">Statement of Result</div></div>'+
      '<div class="cert-body">'+
      '<div class="cert-lbl">This is to certify that</div>'+
      '<div class="cert-name">'+esc(taker)+'</div>'+
@@ -1066,9 +1090,9 @@ function buildPdf(){
   d.setFillColor(...NAVY); d.rect(M,y,CW,58,"F");
   d.setTextColor(255,255,255);
   d.setFont("helvetica","normal"); d.setFontSize(8.5);
-  d.text("ALONGSIDERS ORGANIZATION", W/2, y+19, {align:"center", charSpace:1.6});
+  d.text("ANAKUT YERNG", W/2, y+19, {align:"center", charSpace:1.6});
   d.setFont("helvetica","bold"); d.setFontSize(13);
-  d.text("CEFR Assessment — Anakut Yerng", W/2, y+38, {align:"center"});
+  d.text("CEFR Assessment", W/2, y+38, {align:"center"});
   d.setFont("helvetica","normal"); d.setFontSize(8.5);
   d.text("Statement of Result", W/2, y+50, {align:"center"});
   y+=58;
