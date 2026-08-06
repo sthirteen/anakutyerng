@@ -239,6 +239,12 @@
       If you give an email, we send a copy of your result there. You can leave it blank.
     </p>
 
+    <label class="fld" for="telegram" style="margin-top:14px">Your Telegram number <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+    <input type="text" id="telegram" placeholder="e.g. @username or 012 345 678">
+    <p style="font-size:13px;color:var(--muted);margin:6px 0 0">
+      If you use Telegram, add it so your teacher can reach you. You can leave it blank.
+    </p>
+
     <p id="privacy" style="font-size:13px;color:var(--muted);margin:12px 0 20px">
       Your result is also sent to your teacher at Anakut Yerng so they can place you in the
       right English class. It is not shared with anyone else.
@@ -255,6 +261,7 @@
   <input type="text" name="bot-field">
   <input type="text" name="name">
   <input type="text" name="email">
+  <input type="text" name="telegram">
   <input type="text" name="level">
   <input type="text" name="level_name">
   <input type="text" name="score">
@@ -542,7 +549,7 @@ const BAND_INFO = {
 /* ============================================================
    STATE
    ============================================================ */
-let taker="", takerEmail="",
+let taker="", takerEmail="", takerTelegram="",
     idx=0, answers=new Array(QUESTIONS.length).fill(null),
     plays=new Array(QUESTIONS.length).fill(0), t0=0, timer=null, selected=null, picked={};
 
@@ -564,7 +571,7 @@ $("loginForm").addEventListener("submit",e=>{
       "Please fix it, or leave it blank.</strong>";
     return;
   }
-  taker=v; takerEmail=em;
+  taker=v; takerEmail=em; takerTelegram=($("telegram").value||"").trim();
   // warm up the speech engine (some browsers need a user-gesture-initiated call first)
   try{ window.speechSynthesis && window.speechSynthesis.getVoices(); }catch(_){}
   $("scr-login").classList.add("hidden");
@@ -838,6 +845,7 @@ function buildRecord(r,secs){
   return {
     name: taker,
     email: takerEmail,
+    telegram: takerTelegram,
     level: r.level,
     level_name: BAND_INFO[r.level].name,
     score: r.total+"/"+QUESTIONS.length,
@@ -882,9 +890,10 @@ function sendResult(rec){
 function markSendButton(){
   const b=$("sendBtn"); if(!b) return;
   if(sendOk){
-    b.textContent="Send to Teacher again";
-    b.title="Your result has already been sent automatically.";
+    // Already sent automatically — the button is not needed, so hide it.
+    b.style.display="none";
   }else{
+    b.style.display="";
     b.className="btn";
     b.textContent="Send to Teacher";
   }
