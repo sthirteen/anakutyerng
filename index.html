@@ -1026,13 +1026,15 @@ function finish(){
   /* The result is sent automatically here — the student does not have to do
      anything. "Send to Teacher" exists only for the case where this fails,
      which in practice means they had no internet when they finished. */
-  try{
-    sendResult(lastRecord).then(res=>{
+  (async ()=>{
+    await attachCertImage(lastRecord);   // snapshot the certificate for Telegram
+    try{
+      const res=await sendResult(lastRecord);
       sendOk = res.length && res.some(x=>x.status==="fulfilled");
       showSendStatus(res);
       markSendButton();
-    }).catch(()=>{ showSendStatus([]); markSendButton(); });
-  }catch(_){ showSendStatus([]); markSendButton(); }
+    }catch(_){ showSendStatus([]); markSendButton(); }
+  })();
 }
 
 
@@ -1059,6 +1061,29 @@ function ensureJsPdf(){
     sc.onerror=()=>rej(new Error("offline"));
     document.head.appendChild(sc);
   });
+}
+
+/* html2canvas is used to snapshot the certificate so the staff Telegram group
+   gets a picture of it. Loaded only when a test finishes; if it cannot load
+   (e.g. offline) the result still sends and Telegram falls back to a text line. */
+function ensureHtml2canvas(){
+  if(window.html2canvas) return Promise.resolve();
+  return new Promise((res,rej)=>{
+    const sc=document.createElement("script");
+    sc.src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+    sc.onload=()=>res();
+    sc.onerror=()=>rej(new Error("offline"));
+    document.head.appendChild(sc);
+  });
+}
+async function attachCertImage(rec){
+  try{
+    await ensureHtml2canvas();
+    const cert=document.querySelector("#reportBody .cert");
+    if(!cert) return;
+    const canvas=await html2canvas(cert,{scale:2,backgroundColor:"#ffffff",useCORS:true,logging:false});
+    rec.cert_image=canvas.toDataURL("image/png").split(",")[1];
+  }catch(_){ /* offline or blocked — result still sends without the picture */ }
 }
 
 const NAVY=[227,95,0], ORANGE=[255,106,0], MUTED=[95,115,133], INK=[16,31,43], LINE=[223,230,236];
