@@ -120,6 +120,10 @@
   .adminbar input[type=text]{flex:1 1 200px;width:auto;padding:9px 12px;font-size:14px}
   .dist{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 18px}
   .dist span{font-size:12.5px;background:#f1f5f9;border:1px solid var(--line);border-radius:99px;padding:4px 11px}
+  .fpill{font-family:inherit;color:inherit;font-size:12.5px;background:#f1f5f9;border:1px solid var(--line);border-radius:99px;padding:5px 12px;cursor:pointer}
+  .fpill:hover{border-color:var(--brand);color:var(--brand)}
+  .fpill.on{background:var(--brand);border-color:var(--brand);color:#fff}
+  .fpill.on strong{color:#fff}
 
   /* certificate */
   .cert{border:2px solid var(--brand);border-radius:12px;padding:0;margin:0 0 24px;overflow:hidden}
@@ -1328,7 +1332,7 @@ $("adminForm").addEventListener("submit",async e=>{
   loadResults();
 });
 
-let ROWS=[], sortKey="taken_at", sortDir=-1;
+let ROWS=[], sortKey="taken_at", sortDir=-1, levelFilter="";
 
 async function loadResults(){
   const box=$("adminPanel");
@@ -1359,7 +1363,8 @@ function renderResults(){
   const box=$("adminPanel");
   const q=(($("aSearch")&&$("aSearch").value)||"").trim().toLowerCase();
 
-  let rows=ROWS.filter(r=>!q || (r.name+" "+r.email+" "+r.level).toLowerCase().includes(q));
+  let rows=ROWS.filter(r=>(!levelFilter || r.level===levelFilter) &&
+                          (!q || (r.name+" "+r.email+" "+r.level).toLowerCase().includes(q)));
   rows.sort((a,b)=>{
     const x=(a[sortKey]||""), y=(b[sortKey]||"");
     return (x<y?-1:x>y?1:0)*sortDir;
@@ -1368,11 +1373,12 @@ function renderResults(){
   const dist={};
   ROWS.forEach(r=>dist[r.level]=(dist[r.level]||0)+1);
 
-  let h='<div class="dist"><span><strong>'+ROWS.length+'</strong> tests completed</span>'+
-        BANDS.map(b=>'<span>'+b+': <strong>'+(dist[b]||0)+'</strong></span>').join('')+'</div>';
+  let h='<div class="dist">'+
+        '<button class="fpill'+(!levelFilter?' on':'')+'" data-lv="">All <strong>'+ROWS.length+'</strong></button>'+
+        BANDS.map(b=>'<button class="fpill'+(levelFilter===b?' on':'')+'" data-lv="'+b+'">'+b+' <strong>'+(dist[b]||0)+'</strong></button>').join('')+'</div>';
 
   h+='<div class="adminbar">'+
-     '<input type="text" id="aSearch" placeholder="Search a name, email or level" value="'+esc(q)+'">'+
+     '<input type="text" id="aSearch" placeholder="Search by name…" value="'+esc(q)+'">'+
      '<button class="btn-ghost" id="aCsv">Download CSV</button>'+
      '<button class="btn-ghost" id="aReload">Reload</button>'+
      '<button class="btn-ghost" id="aOut">Sign out</button></div>';
@@ -1402,6 +1408,9 @@ function renderResults(){
 
   const se=$("aSearch");
   if(se){ se.addEventListener("input",()=>{const v=se.value;renderResults();const n=$("aSearch");n.focus();n.value=v;}); }
+  box.querySelectorAll(".fpill").forEach(p=>p.addEventListener("click",()=>{
+    levelFilter=p.getAttribute("data-lv"); renderResults();
+  }));
   $("aCsv").addEventListener("click",downloadCsv);
   $("aReload").addEventListener("click",loadResults);
   $("aOut").addEventListener("click",()=>{ adminToken=null; location.reload(); });
