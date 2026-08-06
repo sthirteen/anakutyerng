@@ -1381,6 +1381,7 @@ function renderResults(){
      '<input type="text" id="aSearch" placeholder="Search by name…" value="'+esc(q)+'">'+
      '<button class="btn-ghost" id="aCsv">Download CSV</button>'+
      '<button class="btn-ghost" id="aReload">Reload</button>'+
+     '<button class="btn-ghost" id="aBackTest">Back to test</button>'+
      '<button class="btn-ghost" id="aOut">Sign out</button></div>';
 
   if(!rows.length){
@@ -1413,6 +1414,12 @@ function renderResults(){
   }));
   $("aCsv").addEventListener("click",downloadCsv);
   $("aReload").addEventListener("click",loadResults);
+  $("aBackTest").addEventListener("click",()=>{
+    $("scr-admin").classList.add("hidden");
+    $("scr-login").classList.remove("hidden");
+    location.hash="";
+    window.scrollTo({top:0});
+  });
   $("aOut").addEventListener("click",()=>{ adminToken=null; location.reload(); });
   box.querySelectorAll(".atable th").forEach(th=>th.addEventListener("click",()=>{
     const k=th.getAttribute("data-k");
