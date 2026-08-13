@@ -209,17 +209,14 @@
     .badge .lvl{font-size:46px}
   }
   /* ---------- launch animation (rabbit splash) ---------- */
-  #splash{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;
+  #splash{position:fixed;inset:0;z-index:9999;overflow:hidden;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:24px;
     background:radial-gradient(120% 120% at 50% 38%, #ff7d1f 0%, var(--brand) 52%, var(--brand-dark) 100%);
-    animation:splashOut .55s ease 2.55s forwards}
+    animation:splashOut .55s ease 2.9s forwards}
   .splash-stage{position:relative;width:210px;height:130px;display:flex;align-items:flex-end;justify-content:center}
-  #splash-rabbit{width:132px;height:auto;opacity:0;transform-origin:60% 90%;
+  #splash-rabbit{width:128px;height:auto;opacity:1;transform-origin:60% 90%;
     filter:brightness(0) invert(1) drop-shadow(0 10px 16px rgba(120,40,0,.4));
-    animation:rabbitRunIn .72s cubic-bezier(.2,.75,.3,1) .12s forwards, rabbitHop .64s ease-in-out 1s 2}
-  .splash-shadow{position:absolute;bottom:6px;left:50%;width:120px;height:12px;border-radius:50%;
-    transform:translateX(-50%);background:rgba(90,30,0,.28);filter:blur(4px);
-    animation:shadowPulse .64s ease-in-out 1s 2;opacity:.28}
+    animation:hopAcross 2.75s .1s forwards}
   .splash-word{color:#fff;font-weight:800;letter-spacing:.24em;font-size:15px;opacity:0;
     text-shadow:0 1px 10px rgba(120,40,0,.3);animation:wordIn .6s ease .95s forwards}
   .splash-dots{display:flex;gap:7px;opacity:0;animation:wordIn .5s ease 1.3s forwards}
@@ -227,20 +224,28 @@
     animation:dot 1s ease-in-out infinite}
   .splash-dots i:nth-child(2){animation-delay:.16s}
   .splash-dots i:nth-child(3){animation-delay:.32s}
-  @keyframes rabbitRunIn{0%{opacity:0;transform:translateX(-130px) scale(.7)}
-    62%{opacity:1;transform:translateX(12px) scale(1.06)}100%{opacity:1;transform:translateX(0) scale(1)}}
-  @keyframes rabbitHop{0%,100%{transform:translateY(0) rotate(0)}
-    32%{transform:translateY(-30px) rotate(-7deg)}64%{transform:translateY(0) rotate(0)}}
-  @keyframes shadowPulse{0%,100%{transform:translateX(-50%) scaleX(1);opacity:.28}
-    32%{transform:translateX(-50%) scaleX(.55);opacity:.12}64%{transform:translateX(-50%) scaleX(1);opacity:.28}}
+  /* hop in from the left, land + pause in the middle, then hop out to the right.
+     Per-keyframe easing gives each hop a real gravity arc (ease-out up, ease-in down). */
+  @keyframes hopAcross{
+    0%  {transform:translate(-85vw,0) rotate(0);animation-timing-function:ease-out}
+    8%  {transform:translate(-58vw,-74px) rotate(-6deg);animation-timing-function:ease-in}
+    16% {transform:translate(-34vw,0) rotate(0);animation-timing-function:ease-out}
+    24% {transform:translate(-16vw,-74px) rotate(-6deg);animation-timing-function:ease-in}
+    33% {transform:translate(0,0) rotate(0);animation-timing-function:linear}
+    58% {transform:translate(0,0) rotate(0);animation-timing-function:ease-out}
+    66% {transform:translate(20vw,-74px) rotate(-6deg);animation-timing-function:ease-in}
+    74% {transform:translate(40vw,0) rotate(0);animation-timing-function:ease-out}
+    82% {transform:translate(62vw,-74px) rotate(-6deg);animation-timing-function:ease-in}
+    100%{transform:translate(90vw,0) rotate(0)}
+  }
   @keyframes wordIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
   @keyframes dot{0%,100%{transform:translateY(0);opacity:.55}50%{transform:translateY(-5px);opacity:1}}
   @keyframes splashOut{to{opacity:0;visibility:hidden}}
   @media print{#splash{display:none!important}}
   @media (prefers-reduced-motion: reduce){
-    #splash-rabbit{animation:none;opacity:1}.splash-shadow{animation:none}
+    #splash-rabbit{animation:none;opacity:1;transform:translate(0,0)}
     .splash-word,.splash-dots{animation:none;opacity:1}
-    #splash{animation:splashOut .4s ease 1.4s forwards}
+    #splash{animation:splashOut .4s ease 1.6s forwards}
   }
 </style>
 </head>
@@ -248,7 +253,6 @@
 <!-- launch animation: the Anakut Yerng rabbit hops in, ~3s, then reveals the app -->
 <div id="splash" aria-hidden="true">
   <div class="splash-stage">
-    <div class="splash-shadow"></div>
     <img id="splash-rabbit" alt="">
   </div>
   <div class="splash-word">ANAKUT YERNG</div>
@@ -1565,7 +1569,7 @@ function downloadCsv(){
 (function(){
   var r=document.getElementById("splash-rabbit");
   if(r && typeof CERT_RABBIT==="string") r.src=CERT_RABBIT;
-  setTimeout(function(){ var s=document.getElementById("splash"); if(s&&s.parentNode) s.parentNode.removeChild(s); }, 3200);
+  setTimeout(function(){ var s=document.getElementById("splash"); if(s&&s.parentNode) s.parentNode.removeChild(s); }, 3550);
 })();
 
 window.__test={QUESTIONS,BANDS,scoreTest};
