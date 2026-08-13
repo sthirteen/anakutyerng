@@ -115,6 +115,11 @@
   .atable th:hover{color:var(--brand)}
   .atable td{vertical-align:top}
   .lvpill{display:inline-block;font-weight:700;font-size:11.5px;padding:2px 7px;border-radius:99px;background:var(--brand-soft);color:var(--brand)}
+  .seemore{display:inline-block;margin-top:3px;font-size:11.5px;color:var(--accent);text-decoration:underline;cursor:pointer;font-weight:600}
+  .seemore:hover{color:var(--accent-dark)}
+  .detrow td{background:#f8fafc;font-size:12px;color:var(--muted);padding:9px 12px;border-top:1px dashed var(--line)}
+  .detbox div{margin:2px 0}
+  .detbox strong{color:var(--ink)}
   .scroller{max-height:60vh;overflow:auto;border:1px solid var(--line);border-radius:10px}
   .adminbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 14px}
   .adminbar input[type=text]{flex:1 1 200px;width:auto;padding:9px 12px;font-size:14px}
@@ -328,8 +333,8 @@
 
 <p class="foot noprint">
   CEFR = Common European Framework of Reference for Languages.<br>
-  This is a placement assessment, not an accredited examination.<br>
-  <a href="#admin" class="adminlink" id="staffLink">For Staff</a>
+  This is a placement assessment, not an accredited examination.<span id="adminAccessWrap"><br>
+  <a href="#admin" class="adminlink" id="staffLink">Admin Access</a></span>
 </p>
 </div>
 
@@ -572,6 +577,7 @@ $("loginForm").addEventListener("submit",e=>{
     return;
   }
   taker=v; takerEmail=em; takerTelegram=($("telegram").value||"").trim();
+  setAdminLink(false);   // hide Admin Access once the test begins
   // warm up the speech engine (some browsers need a user-gesture-initiated call first)
   try{ window.speechSynthesis && window.speechSynthesis.getVoices(); }catch(_){}
   $("scr-login").classList.add("hidden");
@@ -1329,9 +1335,13 @@ async function sha256(txt){
   return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
 }
 
+/* The Admin Access link belongs only on the sign-in page. */
+function setAdminLink(show){ const w=$("adminAccessWrap"); if(w) w.style.display = show ? "" : "none"; }
+
 function showAdmin(){
   ["scr-login","scr-test","scr-report"].forEach(id=>$(id).classList.add("hidden"));
   $("scr-admin").classList.remove("hidden");
+  setAdminLink(false);
   window.scrollTo({top:0});
 }
 
@@ -1339,6 +1349,7 @@ $("staffLink").addEventListener("click",e=>{ e.preventDefault(); showAdmin(); })
 $("aBack").addEventListener("click",()=>{
   $("scr-admin").classList.add("hidden");
   $("scr-login").classList.remove("hidden");
+  setAdminLink(true);
   location.hash="";
 });
 if(location.hash==="#admin") showAdmin();
@@ -1429,20 +1440,28 @@ function renderResults(){
   if(!rows.length){
     h+='<p class="lede">No results match.</p>';
   }else{
-    const cols=[["taken_at","When"],["name","Name"],["email","Email"],["level","Level"],
-                ["score","Score"],["minutes","Time"],["by_skill","By skill"]];
+    const cols=[["taken_at","When"],["name","Name"],["level","Level"],
+                ["score","Score"],["minutes","Time"]];
     h+='<div class="scroller"><table class="atable"><thead><tr>'+
        cols.map(c=>'<th data-k="'+c[0]+'">'+c[1]+(sortKey===c[0]?(sortDir>0?' ▲':' ▼'):'')+'</th>').join('')+
        '</tr></thead><tbody>'+
-       rows.map(r=>'<tr>'+
-         '<td>'+esc(fmtWhen(r.taken_at))+'</td>'+
-         '<td>'+esc(r.name||'')+'</td>'+
-         '<td>'+esc(r.email||'')+'</td>'+
-         '<td><span class="lvpill">'+esc(r.level||'')+'</span></td>'+
-         '<td>'+esc(r.score||'')+'</td>'+
-         '<td>'+esc(r.minutes||'')+'</td>'+
-         '<td style="font-size:12px;color:var(--muted)">'+esc(r.by_skill||'')+'</td>'+
-       '</tr>').join('')+'</tbody></table></div>';
+       rows.map((r,i)=>{
+         const det='det'+i;
+         return '<tr>'+
+           '<td>'+esc(fmtWhen(r.taken_at))+'</td>'+
+           '<td>'+esc(r.name||'')+'<br><span class="seemore" data-det="'+det+'">See more</span></td>'+
+           '<td><span class="lvpill">'+esc(r.level||'')+'</span></td>'+
+           '<td>'+esc(r.score||'')+'</td>'+
+           '<td>'+esc(r.minutes||'')+'</td>'+
+         '</tr>'+
+         '<tr id="'+det+'" class="detrow" hidden><td colspan="5"><div class="detbox">'+
+           (r.percent?'<div><strong>Overall:</strong> '+esc(r.percent)+'</div>':'')+
+           (r.by_skill?'<div><strong>By skill:</strong> '+esc(r.by_skill)+'</div>':'')+
+           (r.by_band?'<div><strong>By band:</strong> '+esc(r.by_band)+'</div>':'')+
+           (r.email?'<div><strong>Email:</strong> '+esc(r.email)+'</div>':'')+
+           (r.telegram?'<div><strong>Telegram:</strong> '+esc(r.telegram)+'</div>':'')+
+         '</div></td></tr>';
+       }).join('')+'</tbody></table></div>';
   }
   h+='<p style="font-size:12.5px;color:var(--muted);margin-top:14px">'+
      'The spreadsheet is the master copy — it holds every column, including the '+
@@ -1454,11 +1473,17 @@ function renderResults(){
   box.querySelectorAll(".fpill").forEach(p=>p.addEventListener("click",()=>{
     levelFilter=p.getAttribute("data-lv"); renderResults();
   }));
+  box.querySelectorAll(".seemore").forEach(a=>a.addEventListener("click",()=>{
+    const d=$(a.getAttribute("data-det")); if(!d) return;
+    if(d.hasAttribute("hidden")){ d.removeAttribute("hidden"); a.textContent="See less"; }
+    else { d.setAttribute("hidden",""); a.textContent="See more"; }
+  }));
   $("aCsv").addEventListener("click",downloadCsv);
   $("aReload").addEventListener("click",loadResults);
   $("aBackTest").addEventListener("click",()=>{
     $("scr-admin").classList.add("hidden");
     $("scr-login").classList.remove("hidden");
+    setAdminLink(true);
     location.hash="";
     window.scrollTo({top:0});
   });
