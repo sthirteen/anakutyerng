@@ -378,7 +378,7 @@
   <div id="reportBody"></div>
   <div class="row" style="margin-top:8px">
     <button class="btn" id="dlBtn">Download Result</button>
-    <button class="btn-ghost" id="sendBtn">Send to Teacher</button>
+    <button class="btn-ghost" id="sendBtn">Send to Teacher on Telegram</button>
     <button class="btn-ghost" onclick="location.reload()">Take Another Test</button>
   </div>
   <p id="btnNote" style="font-size:12.5px;color:var(--muted);margin:12px 0 0"></p>
@@ -948,14 +948,27 @@ function sendResult(rec){
    quietly. If it failed, make the button the obvious next thing to press. */
 function markSendButton(){
   const b=$("sendBtn"); if(!b) return;
-  if(sendOk){
-    // Already sent automatically — the button is not needed, so hide it.
-    b.style.display="none";
-  }else{
-    b.style.display="";
-    b.className="btn";
-    b.textContent="Send to Teacher";
-  }
+  // The button now opens Telegram so the student can share their result to
+  // whoever they choose — so it is always shown, regardless of the auto-send.
+  b.style.display="";
+  b.className="btn-ghost";
+  b.textContent="Send to Teacher on Telegram";
+}
+
+/* Opens Telegram (the app on a phone, the web on a computer) with a share
+   sheet so the student can pick which chat to send their result to. Telegram's
+   share link can carry text + a link only — not the certificate image — so we
+   send a tidy summary of the result plus the test link. */
+function shareOnTelegram(){
+  const rec=lastRecord||{};
+  const text="🏅 Anakut Yerng — English placement result\n"+
+    "Name: "+(rec.name||taker||"")+"\n"+
+    "CEFR level: "+(rec.level||"")+" ("+(rec.level_name||"")+")\n"+
+    "Score: "+(rec.score||"")+"  "+(rec.percent||"");
+  const url="https://t.me/share/url?url="+
+    encodeURIComponent("https://sthirteen.github.io/anakutyerng/")+
+    "&text="+encodeURIComponent(text);
+  window.open(url,"_blank");
 }
 
 function showSendStatus(results){
@@ -1089,7 +1102,7 @@ function finish(){
   /* keep everything the result buttons need */
   lastResult=r; lastSecs=secs; lastRecord=buildRecord(r,secs);
   $("dlBtn").onclick=downloadResultPdf;
-  $("sendBtn").onclick=sendToTeacher;
+  $("sendBtn").onclick=shareOnTelegram;
 
   /* The result is sent automatically here — the student does not have to do
      anything. "Send to Teacher" exists only for the case where this fails,
