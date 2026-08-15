@@ -1090,7 +1090,16 @@ function finish(){
      anything. "Send to Teacher" exists only for the case where this fails,
      which in practice means they had no internet when they finished. */
   (async ()=>{
-    await attachCertImage(lastRecord);   // snapshot the certificate for Telegram
+    /* Try to snapshot the certificate for Telegram, but NEVER let it hold up the
+       result: on a slow phone html2canvas can stall, and the row must still save.
+       Race it against a short timeout — if the picture isn't ready in time we send
+       without it and Telegram falls back to a text line. */
+    try{
+      await Promise.race([
+        attachCertImage(lastRecord),
+        new Promise(res=>setTimeout(res,3500))
+      ]);
+    }catch(_){}
     try{
       const res=await sendResult(lastRecord);
       sendOk = res.length && res.some(x=>x.status==="fulfilled");
@@ -1145,7 +1154,8 @@ async function attachCertImage(rec){
     const cert=document.querySelector("#reportBody .cert");
     if(!cert) return;
     const canvas=await html2canvas(cert,{scale:2,backgroundColor:"#ffffff",useCORS:true,logging:false});
-    rec.cert_image=canvas.toDataURL("image/png").split(",")[1];
+    // JPEG (not PNG): far smaller, so the send is more reliable on phones and Telegram accepts it.
+    rec.cert_image=canvas.toDataURL("image/jpeg",0.85).split(",")[1];
   }catch(_){ /* offline or blocked — result still sends without the picture */ }
 }
 
