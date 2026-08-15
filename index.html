@@ -57,6 +57,15 @@
   .btn-ghost:hover{border-color:var(--muted)}
   .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   .spread{justify-content:space-between}
+  /* result-page buttons: keep on one line; push "Take Another Test" to the far right */
+  .btnrow{flex-wrap:nowrap}
+  .btnrow #againBtn{margin-left:auto}
+  @media (max-width:560px){
+    .card{padding:22px 15px}
+    .btnrow{gap:6px}
+    .btnrow .btn,.btnrow .btn-ghost{flex:1 1 auto;min-width:0;padding:11px 5px;font-size:11px;white-space:nowrap;letter-spacing:-.01em}
+    .btnrow #againBtn{margin-left:0}
+  }
 
   .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:0 0 22px}
   .fact{background:#f8fafb;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
@@ -376,10 +385,10 @@
 <!-- ================= REPORT ================= -->
 <section id="scr-report" class="card hidden">
   <div id="reportBody"></div>
-  <div class="row" style="margin-top:8px">
+  <div class="row btnrow" style="margin-top:8px">
     <button class="btn" id="dlBtn">Download Result</button>
-    <button class="btn-ghost" id="sendBtn">Send to Teacher on Telegram</button>
-    <button class="btn-ghost" onclick="location.reload()">Take Another Test</button>
+    <button class="btn" id="sendBtn">Send to Teacher</button>
+    <button class="btn-ghost" id="againBtn" onclick="location.reload()">Take Another Test</button>
   </div>
   <p id="btnNote" style="font-size:12.5px;color:var(--muted);margin:12px 0 0"></p>
 </section>
@@ -951,8 +960,8 @@ function markSendButton(){
   // The button now opens Telegram so the student can share their result to
   // whoever they choose — so it is always shown, regardless of the auto-send.
   b.style.display="";
-  b.className="btn-ghost";
-  b.textContent="Send to Teacher on Telegram";
+  b.className="btn";
+  b.textContent="Send to Teacher";
 }
 
 /* Opens Telegram (the app on a phone, the web on a computer) with a share
