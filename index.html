@@ -1180,7 +1180,17 @@ async function attachCertImage(rec){
     await ensureHtml2canvas();
     const cert=document.querySelector("#reportBody .cert");
     if(!cert) return;
-    const canvas=await html2canvas(cert,{scale:2,backgroundColor:"#ffffff",useCORS:true,logging:false});
+    /* Capture a FIXED-WIDTH copy so every certificate image is the same size,
+       no matter the student's screen. We clone it off-screen so nothing flashes
+       on the student's page while it is captured. */
+    const W=480;
+    const clone=cert.cloneNode(true);
+    clone.style.cssText+=";width:"+W+"px;max-width:"+W+"px;margin:0;position:fixed;left:-10000px;top:0";
+    document.body.appendChild(clone);
+    let canvas;
+    try{
+      canvas=await html2canvas(clone,{scale:2,backgroundColor:"#ffffff",useCORS:true,logging:false,width:W,windowWidth:W});
+    }finally{ document.body.removeChild(clone); }
     // JPEG (not PNG): far smaller, so the send is more reliable on phones and Telegram accepts it.
     rec.cert_image=canvas.toDataURL("image/jpeg",0.85).split(",")[1];
   }catch(_){ /* offline or blocked — result still sends without the picture */ }
