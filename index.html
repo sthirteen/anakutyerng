@@ -55,6 +55,11 @@
   .btn:disabled{background:#c3ccd4;cursor:not-allowed}
   .btn-ghost{background:#fff;color:var(--ink);border-color:var(--line);padding:11px 18px}
   .btn-ghost:hover{border-color:var(--muted)}
+  .langbar{display:flex;justify-content:flex-end;margin:0 0 10px}
+  .langbtn{font-size:12.5px;padding:6px 13px;border:1px solid var(--line);background:#fff;color:var(--muted);cursor:pointer;font-weight:600;font-family:inherit}
+  .langbtn:first-child{border-radius:8px 0 0 8px}
+  .langbtn:last-child{border-radius:0 8px 8px 0;border-left:0}
+  .langbtn.on{background:var(--brand);color:#fff;border-color:var(--brand)}
   .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   .spread{justify-content:space-between}
   /* result-page buttons: keep on one line; push "Take Another Test" to the far right */
@@ -277,38 +282,39 @@
 
 <!-- ================= LOGIN ================= -->
 <section id="scr-login" class="card">
+  <div class="langbar"><button type="button" class="langbtn on" id="langEN">English</button><button type="button" class="langbtn" id="langKM">ខ្មែរ</button></div>
   <img src="data:image/png;base64,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" alt="Anakut Yerng" class="brandmark">
   <h1>CEFR ASSESSMENT — ANAKUT YERNG</h1>
-  <p class="lede">A full placement test that assesses your English against the Common European Framework of Reference (CEFR), from A1 to C2.</p>
+  <p class="lede" id="t-sub">A full placement test that assesses your English against the Common European Framework of Reference (CEFR), from A1 to C2.</p>
 
   <div class="facts">
-    <div class="fact"><b>30</b><span>questions</span></div>
-    <div class="fact"><b>~12 min</b><span>to complete</span></div>
-    <div class="fact"><b>A1–C2</b><span>CEFR result</span></div>
-    <div class="fact"><b>Certificate</b><span>on completion</span></div>
+    <div class="fact"><b>30</b><span id="t-f1l">questions</span></div>
+    <div class="fact"><b id="t-f2v">~12 min</b><span id="t-f2l">to complete</span></div>
+    <div class="fact"><b>A1–C2</b><span id="t-f3l">CEFR result</span></div>
+    <div class="fact"><b id="t-f4v">Certificate</b><span id="t-f4l">on completion</span></div>
   </div>
 
   <div class="note">
-    <strong>Before you begin:</strong> this test covers grammar, vocabulary, gap-fill, reading, listening,
+    <strong id="t-noteH">Before you begin:</strong> <span id="t-noteB">this test covers grammar, vocabulary, gap-fill, reading, listening,
     error correction and choosing the right tone for a situation. Four questions are listening questions — your
     device will read a short recording aloud, so please use headphones or turn the volume up. You may replay
     each recording up to 3 times. There is no going back once you answer, so read each question carefully.
-    Set aside about 12 minutes and finish in one sitting.
+    Set aside about 12 minutes and finish in one sitting.</span>
   </div>
 
   <form id="loginForm" autocomplete="off">
-    <label class="fld" for="name">Your full name</label>
+    <label class="fld" for="name" id="t-nameL">Your Full Name</label>
     <input type="text" id="name" placeholder="e.g. Sophea Chan" required>
 
-    <label class="fld" for="email" style="margin-top:14px">Your email address <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+    <label class="fld" for="email" style="margin-top:14px"><span id="t-emailL">Your Email</span> <span style="font-weight:400;color:var(--muted)" id="t-opt1">(optional)</span></label>
     <input type="email" id="email" placeholder="e.g. sophea@example.com">
     <p id="emailNote" style="font-size:13px;color:var(--muted);margin:6px 0 0">
       If you give an email, we send a copy of your result there. You can leave it blank.
     </p>
 
-    <label class="fld" for="telegram" style="margin-top:14px">Your Telegram number <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
-    <input type="text" id="telegram" placeholder="e.g. @username or 012 345 678">
-    <p style="font-size:13px;color:var(--muted);margin:6px 0 0">
+    <label class="fld" for="telegram" style="margin-top:14px"><span id="t-tgL">Your Number</span> <span style="font-weight:400;color:var(--muted)" id="t-opt2">(optional)</span></label>
+    <input type="text" id="telegram" placeholder="Telegram Number Preferred">
+    <p id="t-tgNote" style="font-size:13px;color:var(--muted);margin:6px 0 0">
       If you use Telegram, add it so your teacher can reach you. You can leave it blank.
     </p>
 
@@ -316,7 +322,7 @@
       Your result is also sent to your teacher at Anakut Yerng so they can place you in the
       right English class. It is not shared with anyone else.
     </p>
-    <button class="btn" type="submit">Start the test</button>
+    <button class="btn" type="submit" id="t-start">Start the test</button>
   </form>
 </section>
 
@@ -616,12 +622,120 @@ const BAND_INFO = {
 /* ============================================================
    STATE
    ============================================================ */
-let taker="", takerEmail="", takerTelegram="",
+let taker="", takerEmail="", takerTelegram="", lang="en",
     idx=0, answers=new Array(QUESTIONS.length).fill(null),
     plays=new Array(QUESTIONS.length).fill(0), t0=0, timer=null, selected=null, picked={};
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ============================================================
+   LANGUAGE (English / Khmer) — sign-in page and result page only.
+   The questions/answers stay in English on purpose.
+   ============================================================ */
+const T={
+  sub:{en:"A full placement test that assesses your English against the Common European Framework of Reference (CEFR), from A1 to C2.",
+       km:"ការធ្វើតេស្តវាយតម្លៃកម្រិតភាសាអង់គ្លេសរបស់អ្នក ធៀបនឹងស្តង់ដារ CEFR ចាប់ពីកម្រិត A1 ដល់ C2។"},
+  f1l:{en:"questions",km:"សំណួរ"},
+  f2v:{en:"~12 min",km:"~១២ នាទី"}, f2l:{en:"to complete",km:"ដើម្បីបញ្ចប់"},
+  f3l:{en:"CEFR result",km:"លទ្ធផល CEFR"},
+  f4v:{en:"Certificate",km:"វិញ្ញាបនបត្រ"}, f4l:{en:"on completion",km:"ពេលបញ្ចប់"},
+  noteH:{en:"Before you begin:",km:"មុននឹងចាប់ផ្តើម៖"},
+  noteB:{en:"this test covers grammar, vocabulary, gap-fill, reading, listening, error correction and choosing the right tone for a situation. Four questions are listening questions — your device will read a short recording aloud, so please use headphones or turn the volume up. You may replay each recording up to 3 times. There is no going back once you answer, so read each question carefully. Set aside about 12 minutes and finish in one sitting.",
+         km:"តេស្តនេះរួមមាន វេយ្យាករណ៍ វាក្យសព្ទ ការបំពេញចន្លោះ ការអាន ការស្តាប់ ការកែកំហុស និងការជ្រើសរើសសំនៀងសមស្រប។ មានសំណួរស្តាប់ចំនួន៤ — ឧបករណ៍របស់អ្នកនឹងអានសំឡេងឲ្យស្តាប់ ដូច្នេះសូមប្រើកាស ឬបើកសំឡេងឲ្យខ្លាំង។ អ្នកអាចស្តាប់ឡើងវិញបានរហូតដល់៣ដង។ ពេលឆ្លើយហើយ មិនអាចត្រឡប់ក្រោយបានទេ ដូច្នេះសូមអានសំណួរនីមួយៗឲ្យបានយកចិត្តទុកដាក់។ សូមរៀបចំពេលប្រហែល១២នាទី ហើយធ្វើឲ្យចប់ក្នុងពេលតែមួយ។"},
+  nameL:{en:"Your Full Name",km:"ឈ្មោះពេញរបស់អ្នក"},
+  emailL:{en:"Your Email",km:"អ៊ីមែលរបស់អ្នក"},
+  opt:{en:"(optional)",km:"(ស្រេចចិត្ត)"},
+  emailNote:{en:"If you give an email, we send a copy of your result there. You can leave it blank.",
+             km:"បើអ្នកបញ្ចូលអ៊ីមែល យើងនឹងផ្ញើច្បាប់ចម្លងលទ្ធផលទៅទីនោះ។ អ្នកអាចទុកឲ្យទទេបាន។"},
+  tgL:{en:"Your Number",km:"លេខរបស់អ្នក"},
+  tgNote:{en:"If you use Telegram, add it so your teacher can reach you. You can leave it blank.",
+          km:"បើអ្នកប្រើតេលេក្រាម សូមបញ្ចូល ដើម្បីឲ្យគ្រូអាចទាក់ទងអ្នកបាន។ អ្នកអាចទុកឲ្យទទេបាន។"},
+  privacy:{en:"Your result is also sent to your teacher at Anakut Yerng so they can place you in the right English class. It is not shared with anyone else.",
+           km:"លទ្ធផលរបស់អ្នកក៏ត្រូវផ្ញើទៅគ្រូនៅ Anakut Yerng ដែរ ដើម្បីរៀបចំអ្នកចូលថ្នាក់ភាសាអង់គ្លេសសមរម្យ។ វាមិនត្រូវបានចែករំលែកទៅអ្នកផ្សេងទេ។"},
+  start:{en:"Start the test",km:"ចាប់ផ្តើមធ្វើតេស្ត"},
+  stmt:{en:"Statement of Result",km:"សេចក្តីបញ្ជាក់លទ្ធផល"},
+  certify:{en:"This is to certify that",km:"សូមបញ្ជាក់ថា"},
+  assessed:{en:"has been assessed at CEFR level",km:"ត្រូវបានវាយតម្លៃនៅកម្រិត CEFR"},
+  qCorrect:{en:"Questions correct",km:"សំណួរត្រឹមត្រូវ"},
+  overall:{en:"Overall score",km:"ពិន្ទុសរុប"},
+  timeTaken:{en:"Time taken",km:"រយៈពេលប្រើ"},
+  issued:{en:"Issued",km:"ចេញនៅ"},
+  canDo:{en:"At this level you can typically",km:"នៅកម្រិតនេះ ជាទូទៅអ្នកអាច"},
+  sending:{en:"Sending your result…",km:"កំពុងផ្ញើលទ្ធផលរបស់អ្នក…"},
+  sent:{en:"Result sent to your teacher.",km:"លទ្ធផលត្រូវបានផ្ញើទៅគ្រូរបស់អ្នក។"},
+  sentCopyPre:{en:"A copy is also on its way to ",km:"ច្បាប់ចម្លងក៏កំពុងផ្ញើទៅ "},
+  keepCopy:{en:"You can keep your own copy with the <em>Download Result</em> button below.",
+            km:"អ្នកអាចរក្សាច្បាប់ចម្លងផ្ទាល់ខ្លួន ដោយចុចប៊ូតុង <em>ទាញយកលទ្ធផល</em> ខាងក្រោម។"},
+  notSentH:{en:"Your result has not reached your teacher yet",km:"លទ្ធផលរបស់អ្នកមិនទាន់ដល់គ្រូនៅឡើយទេ"},
+  notSentRest:{en:" — your internet may be off. Please press <em>Send to Teacher</em> below when you have a connection.",
+               km:" — អ៊ីនធឺណិតរបស់អ្នកប្រហែលបិទ។ សូមចុច <em>ផ្ញើទៅគ្រូ</em> ខាងក្រោម នៅពេលមានអ៊ីនធឺណិត។"},
+  belowNote:{en:"Fewer than 60% of the A1 questions were answered correctly, so A1 is shown as a starting point. A short one-to-one placement conversation would give a fairer picture at this stage.",
+             km:"សំណួរកម្រិត A1 ត្រូវបានឆ្លើយត្រឹមត្រូវតិចជាង៦០% ដូច្នេះ A1 ត្រូវបានបង្ហាញជាចំណុចចាប់ផ្តើម។ ការសន្ទនាដាក់កម្រិតមួយទល់មួយខ្លីៗ នឹងផ្តល់រូបភាពត្រឹមត្រូវជាងនេះ។"},
+  workingPre:{en:"Working towards ",km:"កំពុងឈានទៅ "},
+  workingMid:{en:". Some ",km:"។ សំណួរ "},
+  workingPost:{en:" questions were answered correctly, so this level is emerging but not yet secure.",
+               km:" មួយចំនួនត្រូវបានឆ្លើយត្រឹមត្រូវ ដូច្នេះកម្រិតនេះកំពុងលេចឡើង ប៉ុន្តែមិនទាន់មាំមួនទេ។"},
+  bySkill:{en:"Performance by skill",km:"លទ្ធផលតាមជំនាញ"},
+  byBand:{en:"Performance by CEFR band",km:"លទ្ធផលតាមកម្រិត CEFR"},
+  thBand:{en:"Band",km:"កម្រិត"}, thLevel:{en:"Level",km:"ឈ្មោះ"}, thCorrect:{en:"Correct",km:"ត្រឹមត្រូវ"}, thResult:{en:"Result",km:"លទ្ធផល"},
+  mastered:{en:"Mastered",km:"ស្ទាត់ជំនាញ"}, partial:{en:"Partial",km:"ខ្លះ"}, notyet:{en:"Not yet",km:"មិនទាន់"},
+  workNext:{en:"What to work on next",km:"អ្វីដែលគួរអនុវត្តបន្ត"},
+  pdfNote:{en:"A full question-by-question review is included in the PDF you get from <em>Download Result</em> below.",
+           km:"ការពិនិត្យសំណួរម្តងមួយៗពេញលេញ មាននៅក្នុងឯកសារ PDF ដែលអ្នកទទួលបានពីប៊ូតុង <em>ទាញយកលទ្ធផល</em> ខាងក្រោម។"},
+  method:{en:"Method: all "+QUESTIONS.length+" questions are tagged to a CEFR band (A1–C2), with equal numbers of questions per band. A band counts as mastered when at least 60% of its questions are answered correctly, and the reported level is the highest band mastered without a gap below it. The can-do statements are written in line with the CEFR framework and paraphrase its descriptors; they are not the verbatim Council of Europe text. This is a placement assessment issued by Alongsiders for teaching purposes and is not an accredited examination certificate.",
+          km:"វិធីសាស្ត្រ៖ សំណួរទាំង"+QUESTIONS.length+"ត្រូវបានចាត់តាមកម្រិត CEFR (A1–C2) ដោយមានចំនួនសំណួរស្មើគ្នាក្នុងមួយកម្រិត។ កម្រិតមួយចាត់ថាបានស្ទាត់ជំនាញ នៅពេលឆ្លើយបានត្រឹមត្រូវយ៉ាងតិច៦០%នៃសំណួររបស់វា ហើយកម្រិតដែលរាយការណ៍ គឺជាកម្រិតខ្ពស់បំផុតដែលបានស្ទាត់ ដោយគ្មានចន្លោះខ្វះខាងក្រោម។ ឃ្លា “អ្នកអាច” ត្រូវបានសរសេរតាមក្របខ័ណ្ឌ CEFR ដោយសង្ខេប មិនមែនជាអត្ថបទផ្លូវការរបស់ Council of Europe ទេ។ នេះជាការវាយតម្លៃដាក់កម្រិត ចេញដោយ Alongsiders សម្រាប់គោលបំណងបង្រៀន ហើយមិនមែនជាវិញ្ញាបនបត្រប្រឡងផ្លូវការទេ។"},
+  skGrammar:{en:"Grammar",km:"វេយ្យាករណ៍"}, skVocabulary:{en:"Vocabulary",km:"វាក្យសព្ទ"}, skCloze:{en:"Cloze",km:"ការបំពេញចន្លោះ"},
+  skReading:{en:"Reading",km:"ការអាន"}, skListening:{en:"Listening",km:"ការស្តាប់"}, "skError correction":{en:"Error correction",km:"ការកែកំហុស"},
+  skRegister:{en:"Register",km:"សំនៀងភាសា"}, skSpelling:{en:"Spelling",km:"ការប្រកប"}, skPictures:{en:"Pictures",km:"រូបភាព"},
+  btnDl:{en:"Download Result",km:"ទាញយកលទ្ធផល"}, btnSend:{en:"Send to Teacher",km:"ផ្ញើទៅគ្រូ"}, btnAgain:{en:"Take Another Test",km:"ធ្វើតេស្តម្តងទៀត"}
+};
+function t(k){ return (T[k] && T[k][lang]!==undefined) ? T[k][lang] : (T[k]?T[k].en:""); }
+
+/* Khmer version of the level descriptions/can-do/advice (English lives in BAND_INFO). */
+const BAND_KM={
+  A1:{name:"អ្នកចាប់ផ្តើម",desc:"អាចយល់ និងប្រើឃ្លាប្រចាំថ្ងៃដែលស៊ាំ និងឃ្លាមូលដ្ឋានសាមញ្ញ។",
+      cando:["យល់ និងប្រើឃ្លាប្រចាំថ្ងៃសាមញ្ញៗ ព្រមទាំងណែនាំខ្លួនឯង។","សួរ និងឆ្លើយសំណួរមូលដ្ឋានអំពីកន្លែងរស់នៅ មនុស្សដែលស្គាល់ និងរបស់ដែលមាន។","បំពេញទម្រង់សាមញ្ញ ដោយបញ្ចូលឈ្មោះ អាសយដ្ឋាន និងថ្ងៃខែឆ្នាំកំណើត។","តាមដានការនិយាយដែលយឺត ច្បាស់ និងមានការឈប់សម្រាកច្រើន។"],
+      advice:["កសាងវាក្យសព្ទគ្រឹះ ៥០០–១,០០០ ពាក្យប្រចាំថ្ងៃ (គ្រួសារ អាហារ ពេលវេលា លេខ ទីកន្លែង)។","ស្ទាត់ Present Simple នៃ <em>be</em>, <em>have</em> និងកិរិយាសព្ទទូទៅ។","អនុវត្តការណែនាំខ្លួនខ្លីៗ និងសំណួរសាមញ្ញ ជារៀងរាល់ថ្ងៃ។","ប្រើសៀវភៅអានមានរូបភាព ឬសៀវភៅអានតាមកម្រិត នៅកម្រិត១។"]},
+  A2:{name:"កម្រិតដំបូង",desc:"អាចដោះស្រាយការសន្ទនាប្រចាំធម្មតាសាមញ្ញ និងពណ៌នារបស់ដែលស៊ាំ ដោយពាក្យសាមញ្ញ។",
+      cando:["យល់ប្រយោគអំពីតម្រូវការចាំបាច់ — ការទិញឥវ៉ាន់ គ្រួសារ ការងារ ទីកន្លែងក្នុងតំបន់។","ដោះស្រាយការសន្ទនាធម្មតាខ្លីៗ ដូចជាការទិញសំបុត្រ ឬសួរផ្លូវ។","ពណ៌នាប្រវត្តិខ្លួន គ្រួសារ និងការងារប្រចាំថ្ងៃ ដោយពាក្យសាមញ្ញ។","អានអត្ថបទខ្លីៗសាមញ្ញ ហើយស្វែងរកព័ត៌មានជាក់លាក់ក្នុងឯកសារប្រចាំថ្ងៃ។"],
+      advice:["ធ្វើឲ្យមាំ Past Simple — កិរិយាធម្មតា និងកិរិយាមិនធម្មតា៤០ដ៏សំខាន់។","រៀនភ្ជាប់គំនិតដោយ <em>because</em>, <em>but</em>, <em>so</em>, <em>then</em>។","អនុវត្តការទំនាក់ទំនងប្រចាំថ្ងៃ៖ ការទិញឥវ៉ាន់ ការសួរផ្លូវ ការណាត់ជួប។","អានសៀវភៅតាមកម្រិត២–៣ និងព័ត៌មានខ្លីៗ សម្រាប់អ្នករៀន។"]},
+  B1:{name:"កម្រិតមធ្យម",desc:"អាចដោះស្រាយស្ថានភាពប្រចាំថ្ងៃភាគច្រើន និងសរសេរអត្ថបទតភ្ជាប់សាមញ្ញ អំពីប្រធានបទដែលស៊ាំ។",
+      cando:["តាមដានចំណុចសំខាន់ៗនៃការនិយាយស្តង់ដារច្បាស់ អំពីរឿងដែលស៊ាំ។","ដោះស្រាយស្ថានភាពភាគច្រើន ពេលធ្វើដំណើរនៅកន្លែងដែលគេនិយាយភាសានេះ។","សរសេរអត្ថបទតភ្ជាប់ អំពីប្រធានបទដែលស៊ាំ ឬចាប់អារម្មណ៍ផ្ទាល់ខ្លួន។","ពន្យល់មតិ និងផែនការរបស់អ្នក ព្រមទាំងផ្តល់ហេតុផលខ្លីៗ។"],
+      advice:["អនុវត្ត Present Perfect ធៀបនឹង Past Simple និង Conditional ទី១ និងទី២។","ផ្លាស់ពីពាក្យតែមួយ ទៅ collocations (<em>make a decision</em>, <em>do a favour</em>)។","សរសេរកថាខណ្ឌខ្លីមួយជារៀងរាល់ថ្ងៃ ហើយឲ្យគេកែ។","ស្តាប់ podcast យឺតៗ និងបទសម្ភាសខ្លីៗ ដោយមិនមើលអក្សររត់ជាមុនសិន។"]},
+  B2:{name:"កម្រិតមធ្យមខ្ពស់",desc:"អាចទំនាក់ទំនងបានស្ទាត់ និងភ្លាមៗខ្លះ ព្រមទាំងសរសេរអត្ថបទច្បាស់ លម្អិត លើប្រធានបទផ្សេងៗ។",
+      cando:["តាមដានការនិយាយវែង និងការពិភាក្សាភាគច្រើន ក្នុងល្បឿនធម្មតា។","ចូលរួមយ៉ាងសកម្មក្នុងការពិភាក្សា ដោយពន្យល់ និងការពារទស្សនៈរបស់អ្នក។","សរសេរអត្ថបទច្បាស់ លម្អិត លើប្រធានបទផ្សេងៗ និងសង្ខេបព័ត៌មានពីប្រភពជាច្រើន។","អានអត្ថបទ និងរបាយការណ៍អំពីបញ្ហាសម័យ ហើយយល់ជំហររបស់អ្នកនិពន្ធ។"],
+      advice:["ហ្វឹកហាត់ Perfect Tenses, Passive និង Reported Speech ឲ្យស្ទាត់ដោយស្វ័យប្រវត្តិ។","រៀន Phrasal Verbs និងសំនួនវោហារ ក្នុងបរិបទ ជាជាងបញ្ជីពាក្យ។","អនុវត្តការសរសេរមតិមានរចនាសម្ព័ន្ធ៖ ការអះអាង ភស្តុតាង ការទទួលស្គាល់ សេចក្តីសន្និដ្ឋាន។","មើលភាពយន្ត និងព័ត៌មានក្នុងល្បឿនធម្មតា ដោយមានអក្សរអង់គ្លេស រួចមិនមាន។"]},
+  C1:{name:"កម្រិតខ្ពស់",desc:"អាចប្រើភាសាអង់គ្លេសបានបត់បែន និងមានប្រសិទ្ធភាព សម្រាប់គោលបំណងសង្គម សិក្សា និងវិជ្ជាជីវៈ។",
+      cando:["យល់អត្ថបទវែង ស្មុគស្មាញ ហើយស្គាល់អត្ថន័យបង្កប់។","បង្ហាញគំនិតបានស្ទាត់ និងភ្លាមៗ ដោយមិនចាំបាច់ស្វែងរកពាក្យច្បាស់។","ប្រើភាសាបានបត់បែន និងមានប្រសិទ្ធភាព សម្រាប់គោលបំណងសង្គម សិក្សា និងវិជ្ជាជីវៈ។","សរសេរបានច្បាស់ មានរចនាសម្ព័ន្ធល្អ លើប្រធានបទស្មុគស្មាញ ដោយគ្រប់គ្រងសំនៀង និងកម្រិតភាសា។"],
+      advice:["កែលម្អកម្រិតភាសា៖ ដឹងពេលណាគួរផ្លូវការ អព្យាក្រឹត ឬក្រៅផ្លូវការ។","អនុវត្ត Inversion, Cleft Sentences និងការតភ្ជាប់កម្រិតខ្ពស់ ដើម្បីបញ្ជាក់។","អានអត្ថបទសារព័ត៌មានវែង និងការសរសេរបែបសិក្សា ដោយកត់សម្គាល់ឃ្លាដែលមិនស៊ាំ។","អនុវត្តការសរសេរមានកំណត់ពេល និងការធ្វើបទបង្ហាញ ដើម្បីបង្កើនភាពត្រឹមត្រូវក្រោមសម្ពាធ។"]},
+  C2:{name:"កម្រិតជំនាញ",desc:"អាចយល់ស្ទើរគ្រប់យ៉ាងដែលអាន ឬស្តាប់ ហើយបង្ហាញគំនិតបានត្រឹមត្រូវ និងស្ទាត់។",
+      cando:["យល់ស្ទើរគ្រប់យ៉ាងដែលអ្នកស្តាប់ ឬអាន ដោយងាយស្រួល។","សង្ខេបព័ត៌មានពីប្រភពនិយាយ និងសរសេរផ្សេងៗ ដោយរៀបចំអំណះអំណាងឡើងវិញយ៉ាងស៊ីសង្វាក់។","បង្ហាញគំនិតភ្លាមៗ ស្ទាត់ខ្លាំង និងត្រឹមត្រូវ ដោយបែងចែកអត្ថន័យល្អិតល្អន់។","ប្រើសំនួនវោហារ អត្ថន័យបង្កប់ និងកម្រិតភាសា ដោយទំនុកចិត្តដូចអ្នកប្រើជំនាញខ្ពស់។"],
+      advice:["ផ្តោតលើភាពល្អិតល្អន់៖ អត្ថន័យបង្កប់ សំនៀង ការចំអក និងឯកសារយោងវប្បធម៌។","អាន និងសរសេរក្នុងវិស័យឯកទេស (ច្បាប់ បច្ចេកទេស អក្សរសាស្ត្រ)។","អនុវត្តការសង្ខេបអំណះអំណាងស្មុគស្មាញ ឲ្យបានត្រឹមត្រូវ ដោយពាក្យផ្ទាល់ខ្លួន។","រក្សាកម្រិតនេះ តាមរយៈការប្រើប្រាស់ជាប្រចាំ — ជំនាញនឹងថយ បើគ្មានការប្រើ។"]}
+};
+function bandInfo(level){
+  if(lang==="km" && BAND_KM[level]){ return BAND_KM[level]; }
+  return BAND_INFO[level];
+}
+
+function applyLang(){
+  const set=(id,txt)=>{ const el=$(id); if(el) el.textContent=txt; };
+  set("t-sub",t("sub"));
+  set("t-f1l",t("f1l")); set("t-f2v",t("f2v")); set("t-f2l",t("f2l"));
+  set("t-f3l",t("f3l")); set("t-f4v",t("f4v")); set("t-f4l",t("f4l"));
+  set("t-noteH",t("noteH")); set("t-noteB",t("noteB"));
+  set("t-nameL",t("nameL")); set("t-emailL",t("emailL")); set("t-opt1",t("opt"));
+  const en=$("emailNote"); if(en) en.textContent=t("emailNote");
+  set("t-tgL",t("tgL")); set("t-opt2",t("opt"));
+  const tn=$("t-tgNote"); if(tn) tn.textContent=t("tgNote");
+  const pv=$("privacy"); if(pv) pv.textContent=t("privacy");
+  set("t-start",t("start"));
+  $("langEN").classList.toggle("on",lang==="en");
+  $("langKM").classList.toggle("on",lang==="km");
+}
+$("langEN").addEventListener("click",()=>{ lang="en"; applyLang(); });
+$("langKM").addEventListener("click",()=>{ lang="km"; applyLang(); });
+applyLang();
 
 /* ---- start ---- */
 $("loginForm").addEventListener("submit",e=>{
@@ -961,7 +1075,7 @@ function markSendButton(){
   // whoever they choose — so it is always shown, regardless of the auto-send.
   b.style.display="";
   b.className="btn";
-  b.textContent="Send to Teacher";
+  b.textContent=t("btnSend");
 }
 
 /* Opens Telegram (the app on a phone, the web on a computer) with a share
@@ -985,20 +1099,20 @@ function showSendStatus(results){
   if(!el) return;
   if(!results || !results.length){
     el.className="note"; el.style.borderLeftColor="var(--muted)";
-    el.innerHTML="<strong>Not sent automatically.</strong> Sending is switched off in this copy of the test. "+
-                 "Please press <em>Download Result</em> below and send the file to your teacher.";
+    el.innerHTML = lang==="km"
+      ? "<strong>មិនបានផ្ញើដោយស្វ័យប្រវត្តិទេ។</strong> ការផ្ញើត្រូវបានបិទក្នុងច្បាប់ចម្លងតេស្តនេះ។ សូមចុច <em>ទាញយកលទ្ធផល</em> ខាងក្រោម ហើយផ្ញើឯកសារទៅគ្រូ។"
+      : "<strong>Not sent automatically.</strong> Sending is switched off in this copy of the test. Please press <em>Download Result</em> below and send the file to your teacher.";
     return;
   }
   const ok=results.some(x=>x.status==="fulfilled");
   if(ok){
     el.className="note";
-    el.innerHTML="<strong>Result sent to your teacher.</strong> "+
-                 (takerEmail?"A copy is also on its way to <em>"+esc(takerEmail)+"</em>. ":"")+
-                 "You can keep your own copy with the <em>Download Result</em> button below.";
+    el.innerHTML="<strong>"+t("sent")+"</strong> "+
+                 (takerEmail? t("sentCopyPre")+"<em>"+esc(takerEmail)+"</em>"+(lang==="km"?"។ ":". ") : "")+
+                 t("keepCopy");
   }else{
     el.className="note"; el.style.borderLeftColor="var(--red)";
-    el.innerHTML="<strong>Your result has not reached your teacher yet</strong> — your internet may be off. "+
-                 "Please press <em>Send to Teacher</em> below when you have a connection.";
+    el.innerHTML="<strong>"+t("notSentH")+"</strong>"+t("notSentRest");
   }
 }
 
@@ -1006,71 +1120,69 @@ function finish(){
   clearInterval(timer);
   const secs=Math.floor((Date.now()-t0)/1000);
   const r=scoreTest(answers);
-  const info=BAND_INFO[r.level];
+  const info=bandInfo(r.level);
   const mm=Math.floor(secs/60), ss=secs%60;
   const date=new Date().toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"});
 
   let h="";
   h+='<div class="cert">'+
      '<div class="cert-top"><img class="cert-rabbit" alt="" src="'+CERT_RABBIT+'"><div class="cert-org">ANAKUT YERNG</div>'+
-     '<div class="cert-ttl">CEFR Assessment</div>'+'<div style="font-size:12.5px;opacity:.8;margin-top:3px">Statement of Result</div></div>'+
+     '<div class="cert-ttl">CEFR Assessment</div>'+'<div style="font-size:12.5px;opacity:.8;margin-top:3px">'+t("stmt")+'</div></div>'+
      '<div class="cert-body">'+
-     '<div class="cert-lbl">This is to certify that</div>'+
+     '<div class="cert-lbl">'+t("certify")+'</div>'+
      '<div class="cert-name">'+esc(taker)+'</div>'+
-     '<div class="cert-lbl">has been assessed at CEFR level</div>'+
+     '<div class="cert-lbl">'+t("assessed")+'</div>'+
      '<div class="cert-lvl">'+r.level+'</div>'+
      '<div class="cert-lvlname">'+info.name+'</div>'+
      '<div class="cert-desc">'+info.desc+'</div>'+
      '<div class="cert-meta">'+
-       '<div><b>'+r.total+' / '+QUESTIONS.length+'</b><span>Questions correct</span></div>'+
-       '<div><b>'+Math.round(r.total/QUESTIONS.length*100)+'%</b><span>Overall score</span></div>'+
-       '<div><b>'+mm+'m '+String(ss).padStart(2,"0")+'s</b><span>Time taken</span></div>'+
+       '<div><b>'+r.total+' / '+QUESTIONS.length+'</b><span>'+t("qCorrect")+'</span></div>'+
+       '<div><b>'+Math.round(r.total/QUESTIONS.length*100)+'%</b><span>'+t("overall")+'</span></div>'+
+       '<div><b>'+mm+'m '+String(ss).padStart(2,"0")+'s</b><span>'+t("timeTaken")+'</span></div>'+
      '</div></div></div>';
 
-  h+='<p class="lede" style="margin:-10px 0 22px;font-size:13px">Issued '+date+
+  h+='<p class="lede" style="margin:-10px 0 22px;font-size:13px">'+t("issued")+' '+date+
      ' &nbsp;·&nbsp; '+esc(taker)+
      (takerEmail?' &nbsp;·&nbsp; '+esc(takerEmail):'')+
      '</p>';
 
-  h+='<div class="cando"><h4>At this level you can typically</h4><ul>'+
+  h+='<div class="cando"><h4>'+t("canDo")+'</h4><ul>'+
      info.cando.map(c=>'<li>'+c+'</li>').join('')+'</ul></div>';
 
-  h+='<div id="sendStatus" class="note noprint">Sending your result&hellip;</div>';
+  h+='<div id="sendStatus" class="note noprint">'+t("sending")+'</div>';
 
   if(r.below){
-    h+='<div class="note">Fewer than 60% of the A1 questions were answered correctly, so A1 is shown as a '+
-       'starting point. A short one-to-one placement conversation would give a fairer picture at this stage.</div>';
+    h+='<div class="note">'+t("belowNote")+'</div>';
   } else if(r.emerging){
-    h+='<div class="note"><strong>Working towards '+r.emerging+'.</strong> Some '+r.emerging+
-       ' questions were answered correctly, so this level is emerging but not yet secure.</div>';
+    h+='<div class="note">'+t("workingPre")+r.emerging+t("workingMid")+r.emerging+t("workingPost")+'</div>';
   }
 
   /* skills — the score summary already sits in the certificate block above */
-  h+='<h3>Performance by skill</h3><div class="sk">';
+  h+='<h3>'+t("bySkill")+'</h3><div class="sk">';
   ["Grammar","Vocabulary","Cloze","Reading","Listening","Error correction","Register","Spelling","Pictures"].forEach(s=>{
     const d=r.perSkill[s]; if(!d) return;
     const p=Math.round(d.c/d.n*100);
-    h+='<div class="skrow"><span>'+s+'</span><div class="mini"><i style="width:'+p+'%"></i></div>'+
+    h+='<div class="skrow"><span>'+t("sk"+s)+'</span><div class="mini"><i style="width:'+p+'%"></i></div>'+
        '<span class="n" style="text-align:right">'+d.c+'/'+d.n+'</span></div>';
   });
   h+='</div>';
 
   /* bands */
-  h+='<h3>Performance by CEFR band</h3><table><thead><tr><th>Band</th><th>Level</th>'+
-     '<th class="n">Correct</th><th style="text-align:right">Result</th></tr></thead><tbody>';
+  h+='<h3>'+t("byBand")+'</h3><table><thead><tr><th>'+t("thBand")+'</th><th>'+t("thLevel")+'</th>'+
+     '<th class="n">'+t("thCorrect")+'</th><th style="text-align:right">'+t("thResult")+'</th></tr></thead><tbody>';
   BANDS.forEach(b=>{
     const d=r.perBand[b];
     const pass=d.c>=r.need(b);
     const cls=pass?"ok":(d.c>0?"part":"no");
-    const txt=pass?"Mastered":(d.c>0?"Partial":"Not yet");
-    h+='<tr><td><strong>'+b+'</strong></td><td>'+BAND_INFO[b].name+'</td>'+
+    const txt=pass?t("mastered"):(d.c>0?t("partial"):t("notyet"));
+    h+='<tr><td><strong>'+b+'</strong></td><td>'+bandInfo(b).name+'</td>'+
        '<td class="n">'+d.c+' / '+d.n+'</td>'+
        '<td style="text-align:right"><span class="pill '+cls+'">'+txt+'</span></td></tr>';
   });
   h+='</tbody></table>';
 
   /* advice */
-  h+='<h3>What to work on next</h3><ul class="adv">'+info.advice.map(a=>'<li>'+a+'</li>').join("")+'</ul>';
+  h+='<h3>'+t("workNext")+'</h3><ul class="adv">'+info.advice.map(a=>'<li>'+a+'</li>').join("")+'</ul>';
 
   /* answer review */
   /* The review is not rendered into the page at all any more — it is drawn
@@ -1092,16 +1204,10 @@ function finish(){
   }
 
   h+='<p style="font-size:13px;color:var(--muted);background:var(--brand-soft);'+
-     'border-radius:8px;padding:11px 13px">A full question-by-question review is included '+
-     'in the PDF you get from <em>Download Result</em> below.</p>';
+     'border-radius:8px;padding:11px 13px">'+t("pdfNote")+'</p>';
 
   h+='<p style="font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px">'+
-     'Method: all '+QUESTIONS.length+' questions are tagged to a CEFR band (A1–C2), with equal numbers of '+
-     'questions per band. A band counts as mastered when at least 60% of its questions are answered '+
-     'correctly, and the reported level is the highest band mastered without a gap below it. The can-do '+
-     'statements are written in line with the CEFR framework and paraphrase its descriptors; they are not '+
-     'the verbatim Council of Europe text. This is a placement assessment issued by Alongsiders for teaching '+
-     'purposes and is not an accredited examination certificate.</p>';
+     t("method")+'</p>';
 
   $("reportBody").innerHTML=h;
   $("scr-test").classList.add("hidden");
@@ -1110,8 +1216,9 @@ function finish(){
 
   /* keep everything the result buttons need */
   lastResult=r; lastSecs=secs; lastRecord=buildRecord(r,secs);
-  $("dlBtn").onclick=downloadResultPdf;
+  $("dlBtn").onclick=downloadResultPdf; $("dlBtn").textContent=t("btnDl");
   $("sendBtn").onclick=shareOnTelegram;
+  const ab=$("againBtn"); if(ab) ab.textContent=t("btnAgain");
 
   /* The result is sent automatically here — the student does not have to do
      anything. "Send to Teacher" exists only for the case where this fails,
