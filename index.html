@@ -13,6 +13,11 @@
 <meta name="theme-color" content="#e35f00">
 <meta name="apple-mobile-web-app-title" content="ANAKUT YERNG">
 <meta name="mobile-web-app-capable" content="yes">
+
+<!-- Proper Khmer font so Khmer names/text render cleanly (nice subscript positioning) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
     /* orange + white. deep orange = structure & primary action,
@@ -28,7 +33,7 @@
   html,body{margin:0;padding:0}
   body{
     background:var(--bg); color:var(--ink);
-    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans Khmer",sans-serif;
     -webkit-font-smoothing:antialiased;
   }
   .wrap{max-width:760px;margin:0 auto;padding:28px 18px 64px}
@@ -1290,6 +1295,18 @@ async function attachCertImage(rec){
     await ensureHtml2canvas();
     const cert=document.querySelector("#reportBody .cert");
     if(!cert) return;
+    /* Make sure the Khmer web font is loaded before we snapshot, so Khmer names
+       render with proper glyphs in the captured image (not a fallback font). */
+    if(document.fonts&&document.fonts.load){
+      try{
+        await Promise.all([
+          document.fonts.load('700 26px "Noto Sans Khmer"'),
+          document.fonts.load('800 72px "Noto Sans Khmer"'),
+          document.fonts.load('400 15px "Noto Sans Khmer"')
+        ]);
+        await document.fonts.ready;
+      }catch(_){}
+    }
     /* Capture a FIXED-WIDTH copy so every certificate image is the same size,
        no matter the student's screen. We clone it off-screen so nothing flashes
        on the student's page while it is captured. */
