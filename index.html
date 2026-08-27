@@ -750,6 +750,18 @@ $("langEN").addEventListener("click",()=>{ lang="en"; applyLang(); });
 $("langKM").addEventListener("click",()=>{ lang="km"; applyLang(); });
 applyLang();
 
+/* Preload the Khmer certificate font right away (fire-and-forget). The student
+   spends ~12 minutes on the test, so by the time they finish the font is already
+   downloaded and cached — this keeps the certificate snapshot fast and stops the
+   font download from ever eating the capture time budget on a slow phone. */
+if(document.fonts&&document.fonts.load){
+  try{
+    document.fonts.load('700 26px "Noto Sans Khmer"');
+    document.fonts.load('800 72px "Noto Sans Khmer"');
+    document.fonts.load('400 15px "Noto Sans Khmer"');
+  }catch(_){}
+}
+
 /* ---- start ---- */
 $("loginForm").addEventListener("submit",e=>{
   e.preventDefault();
@@ -1247,7 +1259,7 @@ function finish(){
     try{
       await Promise.race([
         attachCertImage(lastRecord),
-        new Promise(res=>setTimeout(res,3500))
+        new Promise(res=>setTimeout(res,6000))
       ]);
     }catch(_){}
     try{
@@ -1303,16 +1315,21 @@ async function attachCertImage(rec){
     await ensureHtml2canvas();
     const cert=document.querySelector("#reportBody .cert");
     if(!cert) return;
-    /* Make sure the Khmer web font is loaded before we snapshot, so Khmer names
-       render with proper glyphs in the captured image (not a fallback font). */
+    /* Give the Khmer web font a brief chance to be ready so Khmer names render
+       with proper glyphs — but CAP the wait so it can never delay (or lose) the
+       snapshot. The font is preloaded at page start, so this normally resolves
+       instantly; if the phone is slow we proceed anyway (worst case: fallback
+       glyphs on the picture, which still beats sending no certificate at all). */
     if(document.fonts&&document.fonts.load){
       try{
-        await Promise.all([
-          document.fonts.load('700 26px "Noto Sans Khmer"'),
-          document.fonts.load('800 72px "Noto Sans Khmer"'),
-          document.fonts.load('400 15px "Noto Sans Khmer"')
+        await Promise.race([
+          Promise.all([
+            document.fonts.load('700 26px "Noto Sans Khmer"'),
+            document.fonts.load('800 72px "Noto Sans Khmer"'),
+            document.fonts.load('400 15px "Noto Sans Khmer"')
+          ]),
+          new Promise(res=>setTimeout(res,1200))
         ]);
-        await document.fonts.ready;
       }catch(_){}
     }
     /* Capture a FIXED-WIDTH copy so every certificate image is the same size,
