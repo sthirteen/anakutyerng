@@ -48,11 +48,11 @@
   .hidden{display:none !important}
 
   label.fld{display:block;font-weight:600;font-size:14px;margin:0 0 6px}
-  input[type=text],input[type=email],input[type=password]{
+  input[type=text],input[type=email],input[type=password],input[type=number]{
     width:100%;padding:13px 14px;font-size:16px;font-family:inherit;
     border:1px solid var(--line);border-radius:10px;background:#fbfcfd;color:var(--ink)
   }
-  input[type=text]:focus,input[type=email]:focus,input[type=password]:focus{outline:none;border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px var(--brand-soft)}
+  input[type=text]:focus,input[type=email]:focus,input[type=password]:focus,input[type=number]:focus{outline:none;border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px var(--brand-soft)}
 
   button{font-family:inherit;font-size:15px;cursor:pointer;border-radius:10px;border:1px solid transparent;transition:.15s}
   .btn{background:var(--brand);color:#fff;padding:13px 22px;font-weight:600}
@@ -314,6 +314,9 @@
     <label class="fld" for="name" id="t-nameL">Your Full Name</label>
     <input type="text" id="name" placeholder="e.g. Sophea Chan" required>
 
+    <label class="fld" for="age" style="margin-top:14px" id="t-ageL">Your Age</label>
+    <input type="number" id="age" placeholder="e.g. 18" min="1" max="120" required>
+
     <label class="fld" for="email" style="margin-top:14px"><span id="t-emailL">Your Email</span> <span style="font-weight:400;color:var(--muted)" id="t-opt1">(optional)</span></label>
     <input type="email" id="email" placeholder="e.g. sophea@example.com">
     <p id="emailNote" style="font-size:13px;color:var(--muted);margin:6px 0 0">
@@ -341,6 +344,7 @@
 <form name="results" data-netlify="true" data-netlify-honeypot="bot-field" hidden>
   <input type="text" name="bot-field">
   <input type="text" name="name">
+  <input type="text" name="age">
   <input type="text" name="email">
   <input type="text" name="telegram">
   <input type="text" name="level">
@@ -630,7 +634,7 @@ const BAND_INFO = {
 /* ============================================================
    STATE
    ============================================================ */
-let taker="", takerEmail="", takerTelegram="", lang="en",
+let taker="", takerEmail="", takerTelegram="", takerAge="", lang="en",
     idx=0, answers=new Array(QUESTIONS.length).fill(null),
     plays=new Array(QUESTIONS.length).fill(0), t0=0, timer=null, selected=null, picked={};
 
@@ -652,6 +656,7 @@ const T={
   noteB:{en:"this test covers grammar, vocabulary, gap-fill, reading, listening, error correction and choosing the right tone for a situation. Four questions are listening questions — your device will read a short recording aloud, so please use headphones or turn the volume up. You may replay each recording up to 3 times. There is no going back once you answer, so read each question carefully. Set aside about 12 minutes and finish in one sitting.",
          km:"តេស្តនេះរួមមាន វេយ្យាករណ៍ វាក្យសព្ទ ការបំពេញចន្លោះ ការអាន ការស្តាប់ ការកែកំហុស និងការជ្រើសរើសសំនៀងសមស្រប។ មានសំណួរស្តាប់ចំនួន៤ — ឧបករណ៍របស់អ្នកនឹងអានសំឡេងឲ្យស្តាប់ ដូច្នេះសូមប្រើកាស ឬបើកសំឡេងឲ្យខ្លាំង។ អ្នកអាចស្តាប់ឡើងវិញបានរហូតដល់៣ដង។ ពេលឆ្លើយហើយ មិនអាចត្រឡប់ក្រោយបានទេ ដូច្នេះសូមអានសំណួរនីមួយៗឲ្យបានយកចិត្តទុកដាក់។ សូមរៀបចំពេលប្រហែល១២នាទី ហើយធ្វើឲ្យចប់ក្នុងពេលតែមួយ។"},
   nameL:{en:"Your Full Name",km:"ឈ្មោះពេញរបស់អ្នក"},
+  ageL:{en:"Your Age",km:"អាយុរបស់អ្នក"},
   emailL:{en:"Your Email",km:"អ៊ីមែលរបស់អ្នក"},
   opt:{en:"(optional)",km:"(ស្រេចចិត្ត)"},
   emailNote:{en:"If you give an email, we send a copy of your result there. You can leave it blank.",
@@ -732,7 +737,7 @@ function applyLang(){
   set("t-f1l",t("f1l")); set("t-f2v",t("f2v")); set("t-f2l",t("f2l"));
   set("t-f3l",t("f3l")); set("t-f4v",t("f4v")); set("t-f4l",t("f4l"));
   set("t-noteH",t("noteH")); set("t-noteB",t("noteB"));
-  set("t-nameL",t("nameL")); set("t-emailL",t("emailL")); set("t-opt1",t("opt"));
+  set("t-nameL",t("nameL")); set("t-ageL",t("ageL")); set("t-emailL",t("emailL")); set("t-opt1",t("opt"));
   const en=$("emailNote"); if(en) en.textContent=t("emailNote");
   set("t-tgL",t("tgL")); set("t-opt2",t("opt"));
   const tn=$("t-tgNote"); if(tn) tn.textContent=t("tgNote");
@@ -750,6 +755,8 @@ $("loginForm").addEventListener("submit",e=>{
   e.preventDefault();
   const v=$("name").value.trim();
   if(!v){ $("name").focus(); return; }
+  const ageVal=($("age").value||"").trim();
+  if(!ageVal || isNaN(+ageVal) || +ageVal<1 || +ageVal>120){ $("age").focus(); return; }
   const em=$("email").value.trim();
   /* Email is optional. Only if the student typed something do we sanity-check it,
      so a typo doesn't silently send their result nowhere. Blank is fine — they
@@ -760,7 +767,7 @@ $("loginForm").addEventListener("submit",e=>{
       "Please fix it, or leave it blank.</strong>";
     return;
   }
-  taker=v; takerEmail=em; takerTelegram=($("telegram").value||"").trim();
+  taker=v; takerEmail=em; takerTelegram=($("telegram").value||"").trim(); takerAge=ageVal;
   setAdminLink(false);   // hide Admin Access once the test begins
   // warm up the speech engine (some browsers need a user-gesture-initiated call first)
   try{ window.speechSynthesis && window.speechSynthesis.getVoices(); }catch(_){}
@@ -1034,6 +1041,7 @@ function buildRecord(r,secs){
   BANDS.forEach(b=>band[b]=r.perBand[b].c+"/"+r.perBand[b].n+(r.perBand[b].c>=r.need(b)?" mastered":""));
   return {
     name: taker,
+    age: takerAge,
     email: takerEmail,
     telegram: takerTelegram,
     level: r.level,
@@ -1679,6 +1687,7 @@ function renderResults(){
            '<td>'+esc(r.minutes||'')+'</td>'+
          '</tr>'+
          '<tr id="'+det+'" class="detrow" hidden><td colspan="5"><div class="detbox">'+
+           (r.age?'<div><strong>Age:</strong> '+esc(r.age)+'</div>':'')+
            (r.percent?'<div><strong>Overall:</strong> '+esc(r.percent)+'</div>':'')+
            (r.by_skill?'<div><strong>By skill:</strong> '+esc(r.by_skill)+'</div>':'')+
            (r.by_band?'<div><strong>By band:</strong> '+esc(r.by_band)+'</div>':'')+
