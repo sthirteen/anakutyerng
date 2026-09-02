@@ -1310,9 +1310,23 @@ function ensureHtml2canvas(){
     document.head.appendChild(sc);
   });
 }
+/* html-to-image renders the certificate through the browser's OWN engine (via an
+   SVG foreignObject), so complex scripts like Khmer — including the stacked
+   "coeng" subscripts — are shaped correctly. html2canvas re-implements text
+   drawing and mangles those subscripts into dotted-circle boxes, so we prefer
+   html-to-image and only fall back to html2canvas if it fails to load. */
+function ensureHtmlToImage(){
+  if(window.htmlToImage) return Promise.resolve();
+  return new Promise((res,rej)=>{
+    const sc=document.createElement("script");
+    sc.src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.js";
+    sc.onload=()=>res();
+    sc.onerror=()=>rej(new Error("offline"));
+    document.head.appendChild(sc);
+  });
+}
 async function attachCertImage(rec){
   try{
-    await ensureHtml2canvas();
     const cert=document.querySelector("#reportBody .cert");
     if(!cert) return;
     /* Give the Khmer web font a brief chance to be ready so Khmer names render
@@ -1335,16 +1349,37 @@ async function attachCertImage(rec){
     /* Capture a FIXED-WIDTH copy so every certificate image is the same size,
        no matter the student's screen. We clone it off-screen so nothing flashes
        on the student's page while it is captured. */
+    /* Capture a FIXED-WIDTH copy so every certificate image is the same size,
+       no matter the student's screen. The clone sits in NORMAL flow inside an
+       off-screen holder (NOT position:fixed on the clone itself — that makes
+       html-to-image render a blank page). */
     const W=480;
+    const holder=document.createElement("div");
+    holder.style.cssText="position:fixed;left:-10000px;top:0;width:"+W+"px;background:#ffffff";
     const clone=cert.cloneNode(true);
-    clone.style.cssText+=";width:"+W+"px;max-width:"+W+"px;margin:0;position:fixed;left:-10000px;top:0";
-    document.body.appendChild(clone);
-    let canvas;
+    clone.style.cssText+=";width:"+W+"px;max-width:"+W+"px;margin:0;background:#ffffff";
+    holder.appendChild(clone);
+    document.body.appendChild(holder);
     try{
-      canvas=await html2canvas(clone,{scale:2,backgroundColor:"#ffffff",useCORS:true,logging:false,width:W,windowWidth:W});
-    }finally{ document.body.removeChild(clone); }
-    // JPEG (not PNG): far smaller, so the send is more reliable on phones and Telegram accepts it.
-    rec.cert_image=canvas.toDataURL("image/jpeg",0.85).split(",")[1];
+      /* Preferred: html-to-image renders through the browser (correct Khmer
+         shaping). pixelRatio 2 keeps every certificate the same 960px-wide size.
+         Guard against the occasional blank render (a real cert is ~100k chars;
+         a blank one is ~10k) before accepting it. */
+      try{
+        await ensureHtmlToImage();
+        const dataUrl=await htmlToImage.toJpeg(clone,{quality:0.85,backgroundColor:"#ffffff",pixelRatio:2,width:W});
+        if(dataUrl && dataUrl.indexOf("data:image/jpeg")===0 && dataUrl.length>20000){
+          rec.cert_image=dataUrl.split(",")[1];
+          return;
+        }
+      }catch(_e){ /* fall through to html2canvas */ }
+      /* Fallback: html2canvas. It mis-shapes Khmer subscripts, but a certificate
+         with imperfect Khmer still beats sending no picture at all. */
+      await ensureHtml2canvas();
+      const canvas=await html2canvas(clone,{scale:2,backgroundColor:"#ffffff",useCORS:true,logging:false,width:W,windowWidth:W});
+      // JPEG (not PNG): far smaller, so the send is more reliable on phones and Telegram accepts it.
+      rec.cert_image=canvas.toDataURL("image/jpeg",0.85).split(",")[1];
+    }finally{ if(holder.parentNode) document.body.removeChild(holder); }
   }catch(_){ /* offline or blocked — result still sends without the picture */ }
 }
 
