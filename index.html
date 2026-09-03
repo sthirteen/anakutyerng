@@ -152,6 +152,24 @@
   .fpill.on{background:var(--brand);border-color:var(--brand);color:#fff}
   .fpill.on strong{color:#fff}
   .admin-top{display:flex;justify-content:flex-end;gap:8px;margin:-6px 0 12px}
+  /* question editor */
+  .qcard{border:1px solid var(--line);border-radius:12px;padding:14px;margin:0 0 14px;background:#fff}
+  .qcard-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+  .qnum{font-weight:700;font-size:13px;color:var(--muted);min-width:34px}
+  .qcard-h select{padding:7px 9px;font-size:13px;font-family:inherit;border:1px solid var(--line);border-radius:8px;background:#fbfcfd}
+  .qdel{margin-left:auto;font-size:12.5px;padding:6px 11px;border:1px solid var(--line);background:#fff;color:var(--red);border-radius:8px;cursor:pointer;font-weight:600}
+  .qctx{font-size:12.5px;color:var(--muted);background:var(--brand-soft);border-radius:8px;padding:7px 10px;margin:0 0 9px}
+  textarea.qtext,textarea.qaudio{width:100%;padding:10px 12px;font-size:15px;font-family:inherit;border:1px solid var(--line);border-radius:9px;background:#fbfcfd;color:var(--ink);resize:vertical}
+  textarea.qtext:focus,textarea.qaudio:focus{outline:none;border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px var(--brand-soft)}
+  .qopts{margin:9px 0 0}
+  .qopt{display:flex;align-items:center;gap:8px;margin:0 0 7px}
+  .qopt input[type=radio]{width:18px;height:18px;flex:0 0 auto;accent-color:var(--brand);cursor:pointer}
+  .qoptin{flex:1 1 auto;padding:8px 11px;font-size:14px;font-family:inherit;border:1px solid var(--line);border-radius:8px;background:#fbfcfd;color:var(--ink)}
+  .qoptin:focus{outline:none;border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px var(--brand-soft)}
+  .qoptdel{width:26px;height:26px;flex:0 0 auto;border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:7px;cursor:pointer;font-size:15px;line-height:1}
+  .qaddopt{margin:2px 0 0;font-size:12.5px;padding:6px 11px}
+  .qaudlbl{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin:10px 0 0}
+  .qaudlbl textarea{margin-top:5px}
   .iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;color:var(--muted)}
   .iconbtn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
   .iconbtn svg{width:18px;height:18px}
@@ -489,7 +507,7 @@ const PIC = {
   umbrella:"<svg viewBox='0 0 200 180' width='170' height='153'><path d='M20 84a80 56 0 0 1 160 0q-20 22-40 0-20 22-40 0-20 22-40 0-20 22-40 0z' fill='#c8433c'/><path d='M100 28v56' stroke='#a1332d' stroke-width='3'/><path d='M60 84q10-40 40-56' stroke='#a1332d' stroke-width='3' fill='none'/><path d='M140 84q-10-40-40-56' stroke='#a1332d' stroke-width='3' fill='none'/><path d='M100 84v56' stroke='#6b4a2f' stroke-width='7' stroke-linecap='round'/><path d='M100 140q0 17-15 17-11 0-11-11' stroke='#6b4a2f' stroke-width='7' fill='none' stroke-linecap='round'/><circle cx='100' cy='26' r='4' fill='#6b4a2f'/></svg>"
 };
 
-const QUESTIONS = [
+const DEFAULT_QUESTIONS = [
   /* ==================== A1 (6) ==================== */
   { level:"A1", skill:"Pictures", img:PIC.mango, q:"What is this?",
     opts:["A mango","A banana","A coconut","A pineapple"], a:0 },
@@ -596,6 +614,38 @@ const QUESTIONS = [
           "The plan failed because it was written down badly"], a:0 },
 ];
 
+/* Key maps so a question can reference a shared asset by a short string id.
+   This lets questions be stored/edited as plain JSON in the sheet (admin editor). */
+const PASSAGES = {}; [P_HOURS,P_CLASS,P_LAKE,P_MEETING].forEach(function(p){ PASSAGES[p.id]=p; });
+const CLOZES   = {}; [CLOZE_MAIL,CLOZE_WORK].forEach(function(c){ CLOZES[c.id]=c; });
+
+/* Resolve string refs (passage/cloze/img) into their objects. Already-resolved
+   objects (the built-in defaults) are left untouched, so this is safe on both. */
+function resolveQuestions(list){
+  return (list||[]).map(function(q){
+    var o=Object.assign({},q);
+    if(typeof o.passage==="string") o.passage=PASSAGES[o.passage];
+    if(typeof o.cloze==="string")   o.cloze=CLOZES[o.cloze];
+    if(typeof o.img==="string" && PIC[o.img]) o.img=PIC[o.img];   // resolve a PIC key; leave raw SVG strings as-is
+    return o;
+  });
+}
+/* Inverse: object refs → string keys, so a question list becomes JSON-safe. */
+function serializeQuestions(list){
+  var picKeys=Object.keys(PIC);
+  return (list||[]).map(function(q){
+    var o=Object.assign({},q);
+    if(o.passage && typeof o.passage==="object") o.passage=o.passage.id;
+    if(o.cloze && typeof o.cloze==="object")     o.cloze=o.cloze.id;
+    if(o.img && picKeys.indexOf(o.img)===-1){ var k=picKeys.filter(function(k){return PIC[k]===o.img;})[0]; if(k) o.img=k; }
+    return o;
+  });
+}
+
+/* The live question set. Starts as the built-in defaults (works with no internet);
+   loadContentFromSheet() may replace it with the admin-edited set at startup. */
+let QUESTIONS = resolveQuestions(DEFAULT_QUESTIONS);
+
 /* ---- CEFR band metadata ---- */
 const BANDS = ["A1","A2","B1","B2","C1","C2"];
 const BAND_INFO = {
@@ -637,6 +687,7 @@ const BAND_INFO = {
 let taker="", takerEmail="", takerTelegram="", takerAge="", lang="en",
     idx=0, answers=new Array(QUESTIONS.length).fill(null),
     plays=new Array(QUESTIONS.length).fill(0), t0=0, timer=null, selected=null, picked={};
+let testStarted=false;   // once true, a late content fetch must NOT swap the questions
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -750,6 +801,26 @@ $("langEN").addEventListener("click",()=>{ lang="en"; applyLang(); });
 $("langKM").addEventListener("click",()=>{ lang="km"; applyLang(); });
 applyLang();
 
+/* Load admin-edited questions from the sheet at startup. On ANY problem
+   (offline, endpoint missing, bad data, or the test already started) we keep the
+   built-in questions, so this can never break the test for a student. */
+async function loadContentFromSheet(){
+  if(!SHEET_URL) return;
+  try{
+    const res=await fetch(SHEET_URL+"?action=content&t="+Date.now(),{method:"GET"});
+    const data=await res.json();
+    if(testStarted) return;
+    if(!data || !Array.isArray(data.questions) || data.questions.length<1) return;
+    const resolved=resolveQuestions(data.questions);
+    const ok=resolved.every(function(q){ return q && Array.isArray(q.opts) && q.opts.length>=2 && typeof q.a==="number" && q.a>=0 && q.a<q.opts.length && typeof q.q==="string"; });
+    if(!ok) return;
+    QUESTIONS=resolved;
+    answers=new Array(QUESTIONS.length).fill(null);
+    plays=new Array(QUESTIONS.length).fill(0);
+  }catch(_){ /* keep built-in questions */ }
+}
+loadContentFromSheet();
+
 /* Preload the Khmer certificate font right away (fire-and-forget). The student
    spends ~12 minutes on the test, so by the time they finish the font is already
    downloaded and cached — this keeps the certificate snapshot fast and stops the
@@ -780,6 +851,7 @@ $("loginForm").addEventListener("submit",e=>{
     return;
   }
   taker=v; takerEmail=em; takerTelegram=($("telegram").value||"").trim(); takerAge=ageVal;
+  testStarted=true;      // lock the question set — a late content fetch must not swap it now
   setAdminLink(false);   // hide Admin Access once the test begins
   // warm up the speech engine (some browsers need a user-gesture-initiated call first)
   try{ window.speechSynthesis && window.speechSynthesis.getVoices(); }catch(_){}
@@ -1719,6 +1791,7 @@ function renderResults(){
   h+='<div class="adminbar">'+
      '<input type="text" id="aSearch" placeholder="Search by name…" value="'+esc(q)+'">'+
      '<button class="btn-ghost" id="aCsv">Download CSV</button>'+
+     '<button class="btn-ghost" id="aEditQ">Edit questions</button>'+
      '<button class="btn-ghost" id="aBackTest">Back to test</button></div>';
 
   if(!rows.length){
@@ -1764,6 +1837,7 @@ function renderResults(){
     else { d.setAttribute("hidden",""); a.textContent="See more"; }
   }));
   $("aCsv").addEventListener("click",downloadCsv);
+  $("aEditQ").addEventListener("click",openEditor);
   $("aReload").addEventListener("click",loadResults);
   $("aBackTest").addEventListener("click",()=>{
     $("scr-admin").classList.add("hidden");
@@ -1778,6 +1852,134 @@ function renderResults(){
     if(k===sortKey) sortDir=-sortDir; else { sortKey=k; sortDir=1; }
     renderResults();
   }));
+}
+
+/* ============================================================
+   QUESTION EDITOR (admin only)
+   Edits questions as plain data (passage/cloze/img kept as string keys) and
+   saves them to the sheet. Reading passages / gap-fill texts / pictures are
+   shown for context but edited in a later round.
+   ============================================================ */
+const ED_LEVELS=["A1","A2","B1","B2","C1","C2"];
+const ED_SKILLS=["Grammar","Vocabulary","Reading","Listening","Cloze","Pictures","Error correction","Register","Spelling"];
+let EDIT_QS=null;
+
+async function openEditor(){
+  const box=$("adminPanel");
+  box.innerHTML='<p class="lede">Loading questions&hellip;</p>';
+  let qs=null;
+  try{
+    const res=await fetch(SHEET_URL+"?action=content&t="+Date.now());
+    const data=await res.json();
+    if(data && Array.isArray(data.questions) && data.questions.length) qs=data.questions;
+  }catch(_){}
+  if(!qs) qs=serializeQuestions(QUESTIONS);           // nothing saved yet → edit the current set
+  EDIT_QS=JSON.parse(JSON.stringify(qs));             // deep working copy
+  renderEditor();
+}
+
+function qCardHtml(q,i){
+  const isListen=(q.skill==="Listening");
+  const ctx = q.passage ? ('Reading passage: '+esc((PASSAGES[q.passage]&&PASSAGES[q.passage].title)||q.passage))
+            : q.cloze   ? ('Gap-fill: '+esc((CLOZES[q.cloze]&&CLOZES[q.cloze].title)||q.cloze)+(q.blank?' — gap '+q.blank:''))
+            : (typeof q.img==="string") ? 'Picture question' : '';
+  const opts=(q.opts||[]).map((o,oi)=>
+    '<div class="qopt">'+
+      '<input type="radio" name="correct-'+i+'" data-i="'+i+'" data-a="'+oi+'"'+(q.a===oi?' checked':'')+' title="Correct answer">'+
+      '<input type="text" class="qoptin" data-i="'+i+'" data-oi="'+oi+'" value="'+esc(o||'')+'">'+
+      ((q.opts.length>2)?'<button type="button" class="qoptdel" data-i="'+i+'" data-oi="'+oi+'" title="Remove option">&times;</button>':'<span style="width:26px;flex:0 0 auto"></span>')+
+    '</div>').join('');
+  return '<div class="qcard" data-i="'+i+'">'+
+    '<div class="qcard-h"><span class="qnum">Q'+(i+1)+'</span>'+
+      '<select class="qlevel" data-i="'+i+'">'+ED_LEVELS.map(l=>'<option'+(q.level===l?' selected':'')+'>'+l+'</option>').join('')+'</select>'+
+      '<select class="qskill" data-i="'+i+'">'+ED_SKILLS.map(s=>'<option'+(q.skill===s?' selected':'')+'>'+esc(s)+'</option>').join('')+'</select>'+
+      '<button type="button" class="qdel" data-i="'+i+'">Delete</button></div>'+
+    (ctx?'<div class="qctx">'+ctx+'</div>':'')+
+    '<textarea class="qtext" data-i="'+i+'" rows="2" placeholder="Question text">'+esc(q.q||'')+'</textarea>'+
+    '<div class="qopts">'+opts+'</div>'+
+    '<button type="button" class="qaddopt btn-ghost" data-i="'+i+'">+ Add option</button>'+
+    (isListen?'<label class="qaudlbl">Listening — the words the device reads aloud'+
+      '<textarea class="qaudio" data-i="'+i+'" rows="2" placeholder="e.g. The market opens at six in the morning.">'+esc(q.audio||'')+'</textarea></label>':'')+
+  '</div>';
+}
+
+function renderEditor(){
+  const box=$("adminPanel");
+  const icoOut='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
+  let h='<div class="admin-top"><button class="iconbtn" id="eOut" title="Sign out" aria-label="Sign out">'+icoOut+'</button></div>';
+  h+='<div class="adminbar">'+
+     '<button class="btn-ghost" id="eBackRes">&larr; Results</button>'+
+     '<button class="btn" id="eSave" style="flex:0 0 auto">Save changes</button>'+
+     '<span id="eStatus" style="align-self:center;font-size:13px;color:var(--muted)"></span></div>';
+  h+='<p style="font-size:13px;color:var(--muted);margin:0 0 14px">Edit any question below. '+
+     'Click the dot on the left of an answer to mark it correct. Changes go live for students the next time they open the test. '+
+     '(Reading passages, gap-fill texts and pictures are shown for context and get their own editor later.)</p>';
+  h+='<div id="qlist">'+EDIT_QS.map((q,i)=>qCardHtml(q,i)).join('')+'</div>';
+  h+='<button type="button" class="btn-ghost" id="eAdd" style="margin-top:6px">+ Add a question</button>';
+  box.innerHTML=h;
+  wireEditor();
+}
+
+function wireEditor(){
+  const box=$("adminPanel");
+  box.querySelectorAll(".qtext").forEach(t=>t.addEventListener("input",()=>{ EDIT_QS[+t.dataset.i].q=t.value; }));
+  box.querySelectorAll(".qoptin").forEach(t=>t.addEventListener("input",()=>{ EDIT_QS[+t.dataset.i].opts[+t.dataset.oi]=t.value; }));
+  box.querySelectorAll(".qaudio").forEach(t=>t.addEventListener("input",()=>{ EDIT_QS[+t.dataset.i].audio=t.value; }));
+  box.querySelectorAll(".qlevel").forEach(s=>s.addEventListener("change",()=>{ EDIT_QS[+s.dataset.i].level=s.value; }));
+  box.querySelectorAll(".qskill").forEach(s=>s.addEventListener("change",()=>{ EDIT_QS[+s.dataset.i].skill=s.value; renderEditor(); }));
+  box.querySelectorAll('input[type=radio]').forEach(r=>r.addEventListener("change",()=>{ if(r.checked) EDIT_QS[+r.dataset.i].a=+r.dataset.a; }));
+  box.querySelectorAll(".qoptdel").forEach(b=>b.addEventListener("click",()=>{
+    const i=+b.dataset.i, oi=+b.dataset.oi, q=EDIT_QS[i];
+    q.opts.splice(oi,1);
+    if(q.a===oi) q.a=0; else if(q.a>oi) q.a--;
+    renderEditor();
+  }));
+  box.querySelectorAll(".qaddopt").forEach(b=>b.addEventListener("click",()=>{ EDIT_QS[+b.dataset.i].opts.push(""); renderEditor(); }));
+  box.querySelectorAll(".qdel").forEach(b=>b.addEventListener("click",()=>{
+    const i=+b.dataset.i;
+    if(confirm("Delete question "+(i+1)+"? This cannot be undone once you Save.")){ EDIT_QS.splice(i,1); renderEditor(); }
+  }));
+  $("eAdd").addEventListener("click",()=>{ EDIT_QS.push({level:"A1",skill:"Grammar",q:"",opts:["",""],a:0}); renderEditor(); window.scrollTo({top:document.body.scrollHeight}); });
+  $("eSave").addEventListener("click",saveEditor);
+  $("eBackRes").addEventListener("click",()=>{ $("adminTitle").textContent="Results"; loadResults(); });
+  $("eOut").addEventListener("click",()=>{ adminToken=null; location.reload(); });
+}
+
+async function saveEditor(){
+  const st=$("eStatus");
+  const setSt=(t,c)=>{ st.textContent=t; st.style.color=c; };
+  /* tidy up: drop blank options and keep the correct-answer pointer valid */
+  EDIT_QS.forEach(q=>{
+    const keep=[]; let newA=0;
+    (q.opts||[]).forEach((o,oi)=>{ if(o&&o.trim()){ if(oi===q.a) newA=keep.length; keep.push(o.trim()); } });
+    q.opts=keep; q.a=Math.min(newA,Math.max(0,keep.length-1));
+    if(q.q) q.q=q.q.trim();
+    if(q.audio!=null) q.audio=String(q.audio).trim();
+  });
+  for(let i=0;i<EDIT_QS.length;i++){ const q=EDIT_QS[i];
+    if(!q.q){ setSt("Question "+(i+1)+" has no text.","var(--red)"); return; }
+    if((q.opts||[]).length<2){ setSt("Question "+(i+1)+" needs at least 2 answer choices.","var(--red)"); return; }
+    if(typeof q.a!=="number"||q.a<0||q.a>=q.opts.length){ setSt("Question "+(i+1)+": choose the correct answer.","var(--red)"); return; }
+    if(q.skill==="Listening" && !q.audio){ setSt("Question "+(i+1)+" (Listening) needs the spoken words.","var(--red)"); return; }
+  }
+  if(!EDIT_QS.length){ setSt("Add at least one question first.","var(--red)"); return; }
+  setSt("Saving…","var(--muted)");
+  try{
+    await fetch(SHEET_URL,{method:"POST",mode:"no-cors",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({action:"saveContent",token:adminToken,questions:EDIT_QS})});
+    await new Promise(r=>setTimeout(r,1100));
+    const res=await fetch(SHEET_URL+"?action=content&t="+Date.now());
+    const data=await res.json();
+    if(data && Array.isArray(data.questions) && data.questions.length===EDIT_QS.length){
+      QUESTIONS=resolveQuestions(EDIT_QS);
+      setSt("Saved ✓  Students will see these the next time they open the test.","var(--green)");
+    }else{
+      setSt("Saved, but could not confirm. Please reload and check.","var(--amber)");
+    }
+  }catch(err){
+    setSt("Could not save — check your connection and try again.","var(--red)");
+  }
 }
 
 function fmtWhen(iso){
