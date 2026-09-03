@@ -170,6 +170,11 @@
   .qaddopt{margin:2px 0 0;font-size:12.5px;padding:6px 11px}
   .qaudlbl{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin:10px 0 0}
   .qaudlbl textarea{margin-top:5px}
+  /* manage access */
+  .maAdd{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 6px}
+  .maAdd input[type=email]{flex:1 1 200px;width:auto;padding:9px 12px;font-size:14px;font-family:inherit;border:1px solid var(--line);border-radius:8px;background:#fbfcfd;color:var(--ink)}
+  .maAdd select,.maRole{padding:8px 10px;font-size:13px;font-family:inherit;border:1px solid var(--line);border-radius:8px;background:#fbfcfd;color:var(--ink)}
+  .maDel{width:28px;height:28px;border:1px solid var(--line);background:#fff;color:var(--red);border-radius:7px;cursor:pointer;font-size:16px;line-height:1}
   .iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;color:var(--muted)}
   .iconbtn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
   .iconbtn svg{width:18px;height:18px}
@@ -399,20 +404,10 @@
   <h2 id="adminTitle">ADMIN ACCESS</h2>
 
   <div id="adminLogin">
-    <p class="lede" style="margin-bottom:18px">For Anakut Yerng staff only.</p>
-    <form id="adminForm" autocomplete="off">
-      <label class="fld" for="aEmail">Email</label>
-      <input type="email" id="aEmail" placeholder="name@alongsiders.org" required>
-      <label class="fld" for="aPass" style="margin-top:14px">Password</label>
-      <input type="password" id="aPass" required>
-      <p id="aMsg" style="font-size:13px;color:var(--muted);margin:10px 0 18px">
-        Only the four approved staff addresses can sign in.
-      </p>
-      <div class="row">
-        <button class="btn" type="submit">Sign in</button>
-        <button class="btn-ghost" type="button" id="aBack">Back to the test</button>
-      </div>
-    </form>
+    <p class="lede" style="margin-bottom:18px">For Anakut Yerng staff only. Sign in with your Google account.</p>
+    <div id="gsiButton" style="margin:0 0 12px"></div>
+    <p id="adminAuthMsg" style="font-size:13px;color:var(--muted);margin:0 0 18px"></p>
+    <button class="btn-ghost" type="button" id="aBack">Back to the test</button>
   </div>
 
   <div id="adminPanel" class="hidden"></div>
@@ -1673,31 +1668,79 @@ async function sendToTeacher(){
    it as the data token, so treat the results feed as readable by
    anyone determined. Never reuse this password anywhere else.
    ============================================================ */
-const ADMIN_SALT = "anakut-yerng-cefr-2026";
-const ADMIN_EMAILS = [
-  "cd608db93b2db99d2f9c968343dda69239d10a10410976b602463fe390251830",
-  "01cccc2c780a0d0ee085cda609a00307e93059a063a0db88c5a6fea443b7e25e",
-  "d54dd026999ea916c00f05d49ba411e9d3b9093900778ce01ad219f36e2a29c7",
-  "c14d870ab9f47836c2731fe8c0d543dba195719d9f58c304c28ba85699b071d1"
-];
-const ADMIN_PASS = "baa48f6a789999ddbdbc69a293fd35e279df8c4689a39bee101106b95982d124";
+const GOOGLE_CLIENT_ID = "385956282589-vu361jqpqf4g909mk88miajbr22n333m.apps.googleusercontent.com";
+const MASTER_EMAIL_CLIENT = "sam@alongsiders.org";
+let adminIdToken = null, adminRole = null, adminEmail = null;
 
-let adminToken = null;   /* in memory only - a refresh signs you out, which is
-                            deliberate on a shared phone */
-
-async function sha256(txt){
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(txt));
-  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
-}
+/* who can do what */
+const canResults = ()=> (adminRole==="master"||adminRole==="admin"||adminRole==="monitor");
+const canEdit    = ()=> (adminRole==="master"||adminRole==="admin"||adminRole==="technical");
+const canManage  = ()=> (adminRole==="master");
 
 /* The Admin Access link belongs only on the sign-in page. */
 function setAdminLink(show){ const w=$("adminAccessWrap"); if(w) w.style.display = show ? "" : "none"; }
+
+/* Load Google Identity Services once. */
+let gisReady=null;
+function ensureGis(){
+  if(gisReady) return gisReady;
+  gisReady=new Promise((res,rej)=>{
+    if(window.google && google.accounts && google.accounts.id) return res();
+    const s=document.createElement("script");
+    s.src="https://accounts.google.com/gsi/client"; s.async=true; s.defer=true;
+    s.onload=()=>res(); s.onerror=()=>rej(new Error("offline"));
+    document.head.appendChild(s);
+  });
+  return gisReady;
+}
+
+async function renderSignIn(){
+  const msg=$("adminAuthMsg"); msg.textContent=""; msg.style.color="var(--muted)";
+  try{
+    await ensureGis();
+    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogleCredential, auto_select:false });
+    const holder=$("gsiButton"); holder.innerHTML="";
+    google.accounts.id.renderButton(holder, { theme:"filled_blue", size:"large", text:"signin_with", shape:"pill", width:260 });
+  }catch(_){
+    msg.innerHTML="<strong style='color:var(--red)'>Could not load Google sign-in. Check your internet and reload the page.</strong>";
+  }
+}
+
+async function onGoogleCredential(resp){
+  const msg=$("adminAuthMsg");
+  const idToken = resp && resp.credential;
+  if(!idToken){ msg.textContent="Sign-in failed. Please try again."; return; }
+  msg.textContent="Signing in…"; msg.style.color="var(--muted)";
+  try{
+    const r=await fetch(SHEET_URL+"?action=whoami&idToken="+encodeURIComponent(idToken)+"&t="+Date.now());
+    const data=await r.json();
+    if(!data || !data.role){
+      msg.innerHTML="<strong style='color:var(--red)'>The account "+esc((data&&data.email)||"you used")+
+        " is not on the access list. Ask the master (Sam) to add you.</strong>";
+      return;
+    }
+    adminIdToken=idToken; adminRole=data.role; adminEmail=data.email;
+    openAdminHome();
+  }catch(err){
+    msg.innerHTML="<strong style='color:var(--red)'>Could not verify your sign-in. Please try again.</strong>";
+  }
+}
 
 function showAdmin(){
   ["scr-login","scr-test","scr-report"].forEach(id=>$(id).classList.add("hidden"));
   $("scr-admin").classList.remove("hidden");
   setAdminLink(false);
   window.scrollTo({top:0});
+  adminIdToken=null; adminRole=null; adminEmail=null;
+  $("adminPanel").classList.add("hidden"); $("adminPanel").innerHTML="";
+  $("adminLogin").classList.remove("hidden");
+  $("adminTitle").textContent="Admin access";
+  renderSignIn();
+}
+
+function adminSignOut(){
+  try{ if(window.google&&google.accounts&&google.accounts.id) google.accounts.id.disableAutoSelect(); }catch(_){}
+  showAdmin();
 }
 
 $("staffLink").addEventListener("click",e=>{ e.preventDefault(); showAdmin(); });
@@ -1710,32 +1753,14 @@ $("aBack").addEventListener("click",()=>{
 });
 if(location.hash==="#admin") showAdmin();
 
-$("adminForm").addEventListener("submit",async e=>{
-  e.preventDefault();
-  const msg=$("aMsg");
-  msg.innerHTML="Checking&hellip;"; msg.style.color="var(--muted)";
-  let eh,ph;
-  try{
-    eh = await sha256($("aEmail").value.trim().toLowerCase()+ADMIN_SALT);
-    ph = await sha256($("aPass").value+ADMIN_SALT);
-  }catch(_){
-    msg.innerHTML="<strong style='color:var(--red)'>This browser is too old to sign in. "+
-                  "Please use the results spreadsheet instead.</strong>";
-    return;
-  }
-  /* both must be right, and we say which is wrong only in the vaguest terms */
-  if(!ADMIN_EMAILS.includes(eh) || ph!==ADMIN_PASS){
-    msg.innerHTML="<strong style='color:var(--red)'>That email and password did not match. "+
-                  "Only approved staff addresses can sign in.</strong>";
-    $("aPass").value="";
-    return;
-  }
-  adminToken = ph;
+/* After sign-in, open the first thing this role is allowed to see. */
+function openAdminHome(){
   $("adminLogin").classList.add("hidden");
-  $("adminTitle").textContent="Results";
   $("adminPanel").classList.remove("hidden");
-  loadResults();
-});
+  if(canResults()){ $("adminTitle").textContent="Results"; loadResults(); }
+  else if(adminRole==="technical"){ $("adminTitle").textContent="Edit questions"; openEditor(); }
+  else { adminSignOut(); }
+}
 
 let ROWS=[], sortKey="taken_at", sortDir=-1, levelFilter="";
 
@@ -1750,15 +1775,22 @@ async function loadResults(){
   }
   box.innerHTML='<p class="lede">Loading results&hellip;</p>';
   try{
-    const res=await fetch(SHEET_URL+"?token="+encodeURIComponent(adminToken),{method:"GET"});
+    const res=await fetch(SHEET_URL+"?action=results&idToken="+encodeURIComponent(adminIdToken)+"&t="+Date.now());
     const data=await res.json();
-    if(!data.ok) throw new Error(data.error||"refused");
+    if(!data.ok){
+      if(String(data.error||"").indexOf("access")>-1){
+        box.innerHTML='<div class="warn"><strong>Your sign-in has expired.</strong><br>Please sign in again.</div>'+
+          '<button class="btn" onclick="adminSignOut()">Sign in again</button>';
+        return;
+      }
+      throw new Error(data.error||"refused");
+    }
     ROWS=data.rows||[];
     renderResults();
   }catch(err){
     box.innerHTML='<div class="warn"><strong>Could not load the results.</strong><br>'+
-      'Check that the spreadsheet script is deployed with access set to <em>Anyone</em>, '+
-      'and that it is the newest version. You can always open the spreadsheet directly.<br>'+
+      'Check your internet, or that the results script is deployed as the newest version. '+
+      'You can always open the spreadsheet directly.<br>'+
       '<span style="font-size:12px;opacity:.8">Technical detail: '+esc(String(err.message||err))+'</span></div>'+
       '<button class="btn-ghost" onclick="loadResults()">Try again</button>';
   }
@@ -1791,8 +1823,10 @@ function renderResults(){
   h+='<div class="adminbar">'+
      '<input type="text" id="aSearch" placeholder="Search by name…" value="'+esc(q)+'">'+
      '<button class="btn-ghost" id="aCsv">Download CSV</button>'+
-     '<button class="btn-ghost" id="aEditQ">Edit questions</button>'+
-     '<button class="btn-ghost" id="aBackTest">Back to test</button></div>';
+     (canEdit()?'<button class="btn-ghost" id="aEditQ">Edit questions</button>':'')+
+     (canManage()?'<button class="btn-ghost" id="aManage">Manage access</button>':'')+
+     '<button class="btn-ghost" id="aBackTest">Back to test</button></div>'+
+     '<p style="font-size:12px;color:var(--muted);margin:-6px 0 10px">Signed in as '+esc(adminEmail||"")+' &middot; '+esc(adminRole||"")+'</p>';
 
   if(!rows.length){
     h+='<p class="lede">No results match.</p>';
@@ -1837,7 +1871,8 @@ function renderResults(){
     else { d.setAttribute("hidden",""); a.textContent="See more"; }
   }));
   $("aCsv").addEventListener("click",downloadCsv);
-  $("aEditQ").addEventListener("click",openEditor);
+  if($("aEditQ")) $("aEditQ").addEventListener("click",openEditor);
+  if($("aManage")) $("aManage").addEventListener("click",openManageAccess);
   $("aReload").addEventListener("click",loadResults);
   $("aBackTest").addEventListener("click",()=>{
     $("scr-admin").classList.add("hidden");
@@ -1846,7 +1881,7 @@ function renderResults(){
     location.hash="";
     window.scrollTo({top:0});
   });
-  $("aOut").addEventListener("click",()=>{ adminToken=null; location.reload(); });
+  $("aOut").addEventListener("click",adminSignOut);
   box.querySelectorAll(".atable th").forEach(th=>th.addEventListener("click",()=>{
     const k=th.getAttribute("data-k");
     if(k===sortKey) sortDir=-sortDir; else { sortKey=k; sortDir=1; }
@@ -1908,8 +1943,10 @@ function renderEditor(){
   const icoOut='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
   let h='<div class="admin-top"><button class="iconbtn" id="eOut" title="Sign out" aria-label="Sign out">'+icoOut+'</button></div>';
   h+='<div class="adminbar">'+
-     '<button class="btn-ghost" id="eBackRes">&larr; Results</button>'+
+     (canResults()?'<button class="btn-ghost" id="eBackRes">&larr; Results</button>':'')+
      '<button class="btn" id="eSave" style="flex:0 0 auto">Save changes</button>'+
+     (canManage()?'<button class="btn-ghost" id="eManage">Manage access</button>':'')+
+     (!canResults()?'<button class="btn-ghost" id="eBackTest">Back to test</button>':'')+
      '<span id="eStatus" style="align-self:center;font-size:13px;color:var(--muted)"></span></div>';
   h+='<p style="font-size:13px;color:var(--muted);margin:0 0 14px">Edit any question below. '+
      'Click the dot on the left of an answer to mark it correct. Changes go live for students the next time they open the test. '+
@@ -1941,8 +1978,13 @@ function wireEditor(){
   }));
   $("eAdd").addEventListener("click",()=>{ EDIT_QS.push({level:"A1",skill:"Grammar",q:"",opts:["",""],a:0}); renderEditor(); window.scrollTo({top:document.body.scrollHeight}); });
   $("eSave").addEventListener("click",saveEditor);
-  $("eBackRes").addEventListener("click",()=>{ $("adminTitle").textContent="Results"; loadResults(); });
-  $("eOut").addEventListener("click",()=>{ adminToken=null; location.reload(); });
+  if($("eBackRes")) $("eBackRes").addEventListener("click",()=>{ $("adminTitle").textContent="Results"; loadResults(); });
+  if($("eManage")) $("eManage").addEventListener("click",openManageAccess);
+  if($("eBackTest")) $("eBackTest").addEventListener("click",()=>{
+    $("scr-admin").classList.add("hidden"); $("scr-login").classList.remove("hidden");
+    setAdminLink(true); location.hash=""; window.scrollTo({top:0});
+  });
+  $("eOut").addEventListener("click",adminSignOut);
 }
 
 async function saveEditor(){
@@ -1967,7 +2009,7 @@ async function saveEditor(){
   try{
     await fetch(SHEET_URL,{method:"POST",mode:"no-cors",
       headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify({action:"saveContent",token:adminToken,questions:EDIT_QS})});
+      body:JSON.stringify({action:"saveContent",idToken:adminIdToken,questions:EDIT_QS})});
     await new Promise(r=>setTimeout(r,1100));
     const res=await fetch(SHEET_URL+"?action=content&t="+Date.now());
     const data=await res.json();
@@ -1980,6 +2022,92 @@ async function saveEditor(){
   }catch(err){
     setSt("Could not save — check your connection and try again.","var(--red)");
   }
+}
+
+/* ============================================================
+   MANAGE ACCESS  (master only)
+   Add/remove people and set their role. Enforced on the server too.
+   ============================================================ */
+let MA_USERS=null;
+const MA_ROLES=["admin","technical","monitor"];
+
+async function openManageAccess(){
+  const box=$("adminPanel");
+  $("adminTitle").textContent="Manage access";
+  box.innerHTML='<p class="lede">Loading access list&hellip;</p>';
+  try{
+    const r=await fetch(SHEET_URL+"?action=getUsers&idToken="+encodeURIComponent(adminIdToken)+"&t="+Date.now());
+    const data=await r.json();
+    if(!data.ok){
+      box.innerHTML='<div class="warn"><strong>Could not open Manage access.</strong><br>'+
+        'Only the master can manage access, or your sign-in has expired.</div>'+
+        '<button class="btn" onclick="adminSignOut()">Sign in again</button>';
+      return;
+    }
+    MA_USERS=(data.users||[]).map(u=>({email:String(u.email||"").toLowerCase(),role:(u.role||"monitor")}));
+    renderManageAccess();
+  }catch(err){
+    box.innerHTML='<div class="warn"><strong>Could not load the access list.</strong><br>'+esc(String(err.message||err))+'</div>'+
+      '<button class="btn-ghost" onclick="openManageAccess()">Try again</button>';
+  }
+}
+
+function maRoleSelect(role, idx){
+  return '<select class="maRole" data-i="'+idx+'">'+
+    MA_ROLES.map(r=>'<option value="'+r+'"'+(role===r?' selected':'')+'>'+r+'</option>').join('')+'</select>';
+}
+
+function renderManageAccess(){
+  const box=$("adminPanel");
+  const icoOut='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
+  let h='<div class="admin-top"><button class="iconbtn" id="maOut" title="Sign out" aria-label="Sign out">'+icoOut+'</button></div>';
+  h+='<div class="adminbar">'+
+     '<button class="btn-ghost" id="maBack">&larr; Results</button>'+
+     '<button class="btn" id="maSave" style="flex:0 0 auto">Save access list</button>'+
+     '<span id="maStatus" style="align-self:center;font-size:13px;color:var(--muted)"></span></div>';
+  h+='<p style="font-size:13px;color:var(--muted);margin:0 0 12px">You (the master, '+esc(adminEmail||"")+') always have full access and cannot be removed. Roles: '+
+     '<b>admin</b> = view results + edit; <b>technical</b> = edit only, no results; <b>monitor</b> = view results only. Changes take effect after you Save.</p>';
+  h+='<div class="maAdd"><input type="email" id="maNewEmail" placeholder="name@alongsiders.org">'+
+     '<select id="maNewRole">'+MA_ROLES.map(r=>'<option value="'+r+'">'+r+'</option>').join('')+'</select>'+
+     '<button class="btn-ghost" id="maAddBtn">+ Add person</button></div>';
+  if(!MA_USERS.length){
+    h+='<p class="lede" style="margin-top:14px">No one added yet — only you (the master) can get in.</p>';
+  }else{
+    h+='<div class="scroller"><table class="atable"><thead><tr><th>Email</th><th>Role</th><th></th></tr></thead><tbody>'+
+       MA_USERS.map((u,i)=>'<tr><td>'+esc(u.email)+'</td><td>'+maRoleSelect(u.role,i)+'</td>'+
+         '<td><button class="maDel" data-i="'+i+'" title="Remove">&times;</button></td></tr>').join('')+
+       '</tbody></table></div>';
+  }
+  box.innerHTML=h;
+  box.querySelectorAll(".maRole").forEach(s=>s.addEventListener("change",()=>{ MA_USERS[+s.dataset.i].role=s.value; }));
+  box.querySelectorAll(".maDel").forEach(b=>b.addEventListener("click",()=>{ MA_USERS.splice(+b.dataset.i,1); renderManageAccess(); }));
+  $("maAddBtn").addEventListener("click",()=>{
+    const em=($("maNewEmail").value||"").trim().toLowerCase();
+    const role=$("maNewRole").value, st=$("maStatus");
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)){ st.textContent="Please enter a valid email."; st.style.color="var(--red)"; return; }
+    if(em===MASTER_EMAIL_CLIENT){ st.textContent="That's the master — already has full access."; st.style.color="var(--amber)"; return; }
+    if(MA_USERS.some(u=>u.email===em)){ st.textContent="That email is already on the list."; st.style.color="var(--amber)"; return; }
+    MA_USERS.push({email:em,role:role}); renderManageAccess();
+  });
+  $("maBack").addEventListener("click",()=>{ $("adminTitle").textContent="Results"; loadResults(); });
+  $("maSave").addEventListener("click",saveManageAccess);
+  $("maOut").addEventListener("click",adminSignOut);
+}
+
+async function saveManageAccess(){
+  const st=$("maStatus"); st.textContent="Saving…"; st.style.color="var(--muted)";
+  try{
+    await fetch(SHEET_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({action:"saveUsers",idToken:adminIdToken,users:MA_USERS})});
+    await new Promise(r=>setTimeout(r,1100));
+    const r=await fetch(SHEET_URL+"?action=getUsers&idToken="+encodeURIComponent(adminIdToken)+"&t="+Date.now());
+    const data=await r.json();
+    if(data.ok && Array.isArray(data.users) && data.users.length===MA_USERS.length){
+      st.textContent="Saved ✓  Access updated."; st.style.color="var(--green)";
+    }else{
+      st.textContent="Saved, but could not confirm — reload to check."; st.style.color="var(--amber)";
+    }
+  }catch(err){ st.textContent="Could not save. Please try again."; st.style.color="var(--red)"; }
 }
 
 function fmtWhen(iso){
