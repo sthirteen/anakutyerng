@@ -191,6 +191,32 @@
   .qfield textarea{margin-top:5px}
   .qfield-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:12px 0 0}
   .qhint{font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted)}
+  /* edit text page */
+  .txgroup{border:1px solid var(--line);border-radius:12px;padding:14px;margin:0 0 14px;background:#fff}
+  .txgroup-h{font-size:14px;font-weight:700;color:var(--ink);margin:0 0 12px;padding:0 0 9px;border-bottom:1px solid var(--line)}
+  .txrow{margin:0 0 14px}
+  .txlbl{font-size:12.5px;font-weight:600;color:var(--ink);margin:0 0 6px}
+  .txfields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .txf{display:block;font-size:11px;font-weight:600;color:var(--muted)}
+  .txf span{display:block;margin:0 0 3px}
+  .txin{width:100%;padding:8px 11px;font-size:14px;font-family:inherit;border:1px solid var(--line);border-radius:8px;background:#fbfcfd;color:var(--ink);resize:vertical}
+  .txin:focus{outline:none;border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px var(--brand-soft)}
+  @media (max-width:560px){ .txfields{grid-template-columns:1fr} }
+  .txsmall{font-size:12.5px;color:var(--muted);margin:0 0 12px}
+  /* logo editor */
+  .logoedit{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+  .logoedit-prev{background:#f8fafb;border:1px solid var(--line);border-radius:10px;padding:14px;text-align:center;min-width:130px}
+  .logoedit-prev img{max-width:120px;max-height:110px;height:auto}
+  .logoedit-ctrls{flex:1 1 240px}
+  .logoedit-btns{display:flex;gap:8px;flex-wrap:wrap}
+  .segrow{display:flex;gap:6px;flex-wrap:wrap}
+  .segbtn{font-size:12.5px;padding:6px 13px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;cursor:pointer;font-weight:600;font-family:inherit}
+  .segbtn.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .chkline{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);cursor:pointer}
+  .chkline input{width:17px;height:17px;accent-color:var(--brand)}
+  /* button editor */
+  .btnedit{border-top:1px solid var(--line);padding:12px 0 4px;margin:8px 0 0}
+  .btnedit:first-of-type{border-top:none}
   /* manage access */
   .maAdd{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 6px}
   .maAdd input[type=email]{flex:1 1 200px;width:auto;padding:9px 12px;font-size:14px;font-family:inherit;border:1px solid var(--line);border-radius:8px;background:#fbfcfd;color:var(--ink)}
@@ -829,6 +855,57 @@ const T={
 };
 function t(k){ return (T[k] && T[k][lang]!==undefined) ? T[k][lang] : (T[k]?T[k].en:""); }
 
+/* Admin text overrides: merge saved {key:{en,km}} edits into T (in place, so t() picks them up). */
+function applyTextOverrides(texts){
+  if(!texts || typeof texts!=="object") return;
+  Object.keys(texts).forEach(function(k){
+    if(!T[k]) T[k]={en:"",km:""};
+    var v=texts[k]||{};
+    if(typeof v.en==="string") T[k].en=v.en;
+    if(typeof v.km==="string") T[k].km=v.km;
+  });
+}
+
+/* ---- Page layout config: logo + result-page buttons (admin-editable) ---- */
+let CFG={
+  logo:{ src:"", align:"center", size:"medium", show:true },   // src "" = keep the built-in rabbit
+  buttons:{
+    btnDl:{ show:true, mode:"default", url:"" },
+    btnSend:{ show:true, mode:"default", url:"" },
+    btnAgain:{ show:true, mode:"default", url:"" }
+  }
+};
+function applyConfigOverrides(c){
+  if(!c || typeof c!=="object") return;
+  if(c.logo && typeof c.logo==="object") Object.assign(CFG.logo, c.logo);
+  if(c.buttons && typeof c.buttons==="object"){
+    Object.keys(CFG.buttons).forEach(function(k){ if(c.buttons[k]) Object.assign(CFG.buttons[k], c.buttons[k]); });
+  }
+}
+function applyLogoConfig(){
+  var el=document.querySelector(".brandmark"); if(!el) return;
+  var lg=CFG.logo||{};
+  el.style.display=(lg.show===false)?"none":"block";
+  if(lg.src) el.src=lg.src;
+  var w=(lg.size==="small")?90:(lg.size==="large")?160:120;
+  el.style.width=w+"px";
+  if(lg.align==="left"){ el.style.marginLeft="0"; el.style.marginRight="auto"; }
+  else if(lg.align==="right"){ el.style.marginLeft="auto"; el.style.marginRight="0"; }
+  else { el.style.marginLeft="auto"; el.style.marginRight="auto"; }
+}
+function applyButtonConfig(){
+  var ids={ btnDl:"dlBtn", btnSend:"sendBtn", btnAgain:"againBtn" };
+  Object.keys(ids).forEach(function(k){
+    var cfg=(CFG.buttons&&CFG.buttons[k])||{}, el=document.getElementById(ids[k]); if(!el) return;
+    if(cfg.mode==="link" && cfg.url){
+      // strip the built-in handler by cloning, then make it open the link
+      var clone=el.cloneNode(true); el.parentNode.replaceChild(clone, el); el=clone;
+      el.onclick=function(ev){ if(ev) ev.preventDefault(); window.open(cfg.url,"_blank","noopener"); };
+    }
+    el.style.display=(cfg.show===false)?"none":"";
+  });
+}
+
 /* Khmer version of the level descriptions/can-do/advice (English lives in BAND_INFO). */
 const BAND_KM={
   A1:{name:"អ្នកចាប់ផ្តើម",desc:"អាចយល់ និងប្រើឃ្លាប្រចាំថ្ងៃដែលស៊ាំ និងឃ្លាមូលដ្ឋានសាមញ្ញ។",
@@ -883,6 +960,8 @@ async function loadContentFromSheet(){
     const res=await fetch(SHEET_URL+"?action=content&t="+Date.now(),{method:"GET"});
     const data=await res.json();
     if(testStarted) return;
+    if(data && data.texts){ applyTextOverrides(data.texts); if(typeof applyLang==="function") applyLang(); }  // saved wording, if any
+    if(data && data.config){ applyConfigOverrides(data.config); applyLogoConfig(); }                          // saved logo/button layout
     if(!data || !Array.isArray(data.questions) || data.questions.length<1) return;
     const resolved=resolveQuestions(data.questions);
     const ok=resolved.every(function(q){ return q && Array.isArray(q.opts) && q.opts.length>=2 && typeof q.a==="number" && q.a>=0 && q.a<q.opts.length && typeof q.q==="string"; });
@@ -1249,6 +1328,7 @@ function markSendButton(){
   b.style.display="";
   b.className="btn";
   b.textContent=t("btnSend");
+  applyButtonConfig();   // re-apply admin show/hide/link settings for Send
 }
 
 /* Opens Telegram (the app on a phone, the web on a computer) with a share
@@ -1392,6 +1472,7 @@ function finish(){
   $("dlBtn").onclick=downloadResultPdf; $("dlBtn").textContent=t("btnDl");
   $("sendBtn").onclick=shareOnTelegram;
   const ab=$("againBtn"); if(ab) ab.textContent=t("btnAgain");
+  applyButtonConfig();   // apply admin show/hide/link settings
 
   /* The result is sent automatically here — the student does not have to do
      anything. "Send to Teacher" exists only for the case where this fails,
@@ -1841,6 +1922,7 @@ function openAdminHome(){
   const buttons=[];
   if(canManage()) buttons.push(["manage","Manage Access"]);
   if(canEdit())   buttons.push(["edit","Edit Questions"]);
+  if(canEdit())   buttons.push(["texts","Edit Pages"]);
   buttons.push(["preview","Preview Test"]);           // every role can preview
   if(canResults())buttons.push(["results","See Results"]);
   const userName=(adminEmail||"").split("@")[0];
@@ -1887,6 +1969,7 @@ function openAdminTab(name){
   setTimeout(function(){
     if(name==="results" && canResults()) loadResults();
     else if(name==="edit" && canEdit()) openEditor();
+    else if(name==="texts" && canEdit()) openTextEditor();
     else if(name==="manage" && canManage()) openManageAccess();
     else if(name==="preview") openPreview();
     setTimeout(hideAdmLoad, 620);
@@ -2198,6 +2281,209 @@ async function saveEditor(){
     if(data && Array.isArray(data.questions) && data.questions.length===EDIT_QS.length){
       QUESTIONS=resolveQuestions(EDIT_QS);
       setSt("Saved ✓  Students will see these the next time they open the test.","var(--green)");
+    }else{
+      setSt("Saved, but could not confirm. Please reload and check.","var(--amber)");
+    }
+  }catch(err){
+    setSt("Could not save — check your connection and try again.","var(--red)");
+  }
+}
+
+/* ============================================================
+   EDIT TEXT (admin) — change the wording on the sign-in, result
+   and certificate pages, in English and Khmer. Saved to the sheet
+   under the "texts" key and merged into T at startup.
+   ============================================================ */
+const TEXT_GROUPS=[
+  {title:"Sign-in / welcome page", keys:[
+    ["sub","Sub-title under the main heading"],
+    ["noteH","\"Before you begin\" heading"],
+    ["noteB","\"Before you begin\" paragraph"],
+    ["nameL","Name field label"],
+    ["ageL","Age field label"],
+    ["emailL","Email field label"],
+    ["opt","\"(optional)\" tag"],
+    ["emailNote","Note under the email field"],
+    ["tgL","Phone/Telegram field label"],
+    ["tgNote","Note under the phone field"],
+    ["privacy","Privacy note"],
+    ["start","Start button"],
+    ["f1l","Feature 1 label (questions)"],
+    ["f2v","Feature 2 value (~12 min)"],
+    ["f2l","Feature 2 label (to complete)"],
+    ["f3l","Feature 3 label (CEFR result)"],
+    ["f4v","Feature 4 value (Certificate)"],
+    ["f4l","Feature 4 label (on completion)"]
+  ]},
+  {title:"Result page", keys:[
+    ["sending","\"Sending your result…\""],
+    ["sent","\"Result sent\" message"],
+    ["sentCopyPre","\"A copy is on its way to…\" prefix"],
+    ["keepCopy","\"Keep your own copy\" note"],
+    ["notSentH","\"Not sent yet\" heading"],
+    ["notSentRest","\"Not sent yet\" rest of message"],
+    ["belowNote","Below-A1 note"],
+    ["workingPre","\"Working towards…\" prefix"],
+    ["workingMid","\"Working towards…\" middle"],
+    ["workingPost","\"Working towards…\" end"],
+    ["canDo","\"At this level you can…\" heading"],
+    ["bySkill","\"Performance by skill\" heading"],
+    ["byBand","\"Performance by CEFR band\" heading"],
+    ["thBand","Table header: Band"],
+    ["thLevel","Table header: Level"],
+    ["thCorrect","Table header: Correct"],
+    ["thResult","Table header: Result"],
+    ["mastered","\"Mastered\" tag"],
+    ["partial","\"Partial\" tag"],
+    ["notyet","\"Not yet\" tag"],
+    ["workNext","\"What to work on next\" heading"],
+    ["pdfNote","PDF review note"],
+    ["method","Method / disclaimer paragraph"],
+    ["btnDl","Download button"],
+    ["btnSend","Send to Teacher button"],
+    ["btnAgain","Take Another Test button"]
+  ]},
+  {title:"Certificate", keys:[
+    ["stmt","Title (Statement of Result)"],
+    ["certify","\"This is to certify that\""],
+    ["assessed","\"has been assessed at CEFR level\""],
+    ["qCorrect","\"Questions correct\" label"],
+    ["overall","\"Overall score\" label"],
+    ["timeTaken","\"Time taken\" label"],
+    ["issued","\"Issued\" label"]
+  ]}
+];
+let TEXT_EDITS=null, CFG_EDITS=null;
+const BTN_META=[["btnDl","Download Result"],["btnSend","Send to Teacher"],["btnAgain","Take Another Test"]];
+
+function openTextEditor(){
+  // Work on a copy of the current T values so the admin sees the live wording
+  TEXT_EDITS={};
+  TEXT_GROUPS.forEach(g=>g.keys.forEach(k=>{
+    const key=k[0], cur=T[key]||{en:"",km:""};
+    TEXT_EDITS[key]={en:cur.en||"",km:cur.km||""};
+  }));
+  CFG_EDITS=JSON.parse(JSON.stringify(CFG));   // logo + buttons working copy
+  renderTextEditor();
+}
+
+function logoSectionHtml(){
+  const lg=CFG_EDITS.logo||{};
+  const cur=(lg.src|| (document.querySelector(".brandmark")||{}).src ||"");
+  const seg=(name,val,curVal,label)=>'<button type="button" class="segbtn'+(curVal===val?' on':'')+'" data-seg="'+name+'" data-val="'+val+'">'+label+'</button>';
+  return '<div class="txgroup"><div class="txgroup-h">Logo</div>'+
+    '<div class="logoedit">'+
+      '<div class="logoedit-prev"><img id="logoPrev" src="'+cur+'" alt=""></div>'+
+      '<div class="logoedit-ctrls">'+
+        '<div class="logoedit-btns">'+
+          '<label class="qpicbtn"><input type="file" accept="image/*" id="logoFile" hidden>Change image</label>'+
+          '<button type="button" class="qpicbtn qpicdel" id="logoReset">Reset to default</button>'+
+        '</div>'+
+        '<div class="txlbl" style="margin-top:12px">Position</div><div class="segrow">'+
+          seg("align","left",lg.align,"Left")+seg("align","center",lg.align,"Center")+seg("align","right",lg.align,"Right")+'</div>'+
+        '<div class="txlbl" style="margin-top:10px">Size</div><div class="segrow">'+
+          seg("size","small",lg.size,"Small")+seg("size","medium",lg.size,"Medium")+seg("size","large",lg.size,"Large")+'</div>'+
+        '<label class="chkline" style="margin-top:12px"><input type="checkbox" id="logoShow"'+(lg.show!==false?' checked':'')+'> Show the logo</label>'+
+      '</div>'+
+    '</div></div>';
+}
+
+function buttonSectionHtml(){
+  let h='<div class="txgroup"><div class="txgroup-h">Result-page buttons</div>'+
+    '<p class="txsmall">Show or hide each button, or turn it into a link that opens a web address. '+
+    'To rename a button, edit its wording under “Result page” below.</p>';
+  BTN_META.forEach(bm=>{
+    const key=bm[0], cfg=CFG_EDITS.buttons[key]||{show:true,mode:"default",url:""};
+    h+='<div class="btnedit"><div class="txlbl">'+esc(bm[1])+'</div>'+
+      '<label class="chkline"><input type="checkbox" class="btnShow" data-k="'+key+'"'+(cfg.show!==false?' checked':'')+'> Show this button</label>'+
+      '<div class="segrow" style="margin-top:8px">'+
+        '<button type="button" class="segbtn btnMode'+(cfg.mode!=="link"?' on':'')+'" data-k="'+key+'" data-mode="default">Normal action</button>'+
+        '<button type="button" class="segbtn btnMode'+(cfg.mode==="link"?' on':'')+'" data-k="'+key+'" data-mode="link">Open a link</button>'+
+      '</div>'+
+      '<input type="url" class="btnUrl txin" data-k="'+key+'" placeholder="https://…" value="'+esc(cfg.url||"")+'" style="margin-top:8px;'+(cfg.mode==="link"?'':'display:none')+'">'+
+      '</div>';
+  });
+  h+='</div>';
+  return h;
+}
+
+function renderTextEditor(){
+  const box=$("adminPanel");
+  let h=admBackBar();
+  h+='<div class="adminbar">'+
+     '<button class="btn" id="txSave" style="flex:0 0 auto">Save changes</button>'+
+     '<span id="txStatus" style="align-self:center;font-size:13px;color:var(--muted)"></span></div>';
+  h+='<p style="font-size:13px;color:var(--muted);margin:0 0 14px">Change any wording below. '+
+     'Fill in English and Khmer. Leave a box as it is to keep the current wording. '+
+     'Text in &lt;em&gt;…&lt;/em&gt; shows in italics. Changes go live next time a student opens the app.</p>';
+  h+=logoSectionHtml();
+  h+=buttonSectionHtml();
+  TEXT_GROUPS.forEach(g=>{
+    h+='<div class="txgroup"><div class="txgroup-h">'+esc(g.title)+'</div>';
+    g.keys.forEach(k=>{
+      const key=k[0], label=k[1], v=TEXT_EDITS[key]||{en:"",km:""};
+      h+='<div class="txrow"><div class="txlbl">'+esc(label)+'</div>'+
+         '<div class="txfields">'+
+           '<label class="txf"><span>English</span><textarea class="txin" data-k="'+key+'" data-l="en" rows="2">'+esc(v.en)+'</textarea></label>'+
+           '<label class="txf"><span>ខ្មែរ (Khmer)</span><textarea class="txin" data-k="'+key+'" data-l="km" rows="2">'+esc(v.km)+'</textarea></label>'+
+         '</div></div>';
+    });
+    h+='</div>';
+  });
+  h+='<button class="btn" id="txSave2" style="margin-top:6px">Save changes</button>';
+  box.innerHTML=h;
+  wireAdmBack();
+  box.querySelectorAll(".txin").forEach(t=>t.addEventListener("input",()=>{
+    if(t.classList.contains("btnUrl")){ CFG_EDITS.buttons[t.dataset.k].url=t.value; return; }
+    if(TEXT_EDITS[t.dataset.k]) TEXT_EDITS[t.dataset.k][t.dataset.l]=t.value;
+  }));
+  // logo: image upload / reset
+  const lf=$("logoFile");
+  if(lf) lf.addEventListener("change",async()=>{
+    const f=lf.files&&lf.files[0]; if(!f) return;
+    try{ const d=await fileToPicDataUrl(f); CFG_EDITS.logo.src=d; const p=$("logoPrev"); if(p) p.src=d; }
+    catch(_){ alert("Sorry, that image could not be read. Try a JPG or PNG."); }
+  });
+  if($("logoReset")) $("logoReset").addEventListener("click",()=>{
+    CFG_EDITS.logo.src=""; renderTextEditor();
+  });
+  if($("logoShow")) $("logoShow").addEventListener("change",e=>{ CFG_EDITS.logo.show=e.target.checked; });
+  // segmented controls (logo position/size)
+  box.querySelectorAll(".segbtn[data-seg]").forEach(b=>b.addEventListener("click",()=>{
+    CFG_EDITS.logo[b.dataset.seg]=b.dataset.val;
+    box.querySelectorAll('.segbtn[data-seg="'+b.dataset.seg+'"]').forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+  }));
+  // buttons: show/hide, mode, url
+  box.querySelectorAll(".btnShow").forEach(c=>c.addEventListener("change",()=>{ CFG_EDITS.buttons[c.dataset.k].show=c.checked; }));
+  box.querySelectorAll(".btnMode").forEach(b=>b.addEventListener("click",()=>{
+    const k=b.dataset.k, mode=b.dataset.mode;
+    CFG_EDITS.buttons[k].mode=mode;
+    box.querySelectorAll('.btnMode[data-k="'+k+'"]').forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+    const url=box.querySelector('.btnUrl[data-k="'+k+'"]'); if(url) url.style.display=(mode==="link")?"":"none";
+  }));
+  if($("txSave")) $("txSave").addEventListener("click",saveTextEditor);
+  if($("txSave2")) $("txSave2").addEventListener("click",saveTextEditor);
+  window.scrollTo({top:0});
+}
+
+async function saveTextEditor(){
+  const st=$("txStatus");
+  const setSt=(t,c)=>{ if(st){ st.textContent=t; st.style.color=c; } };
+  setSt("Saving…","var(--muted)");
+  try{
+    await fetch(SHEET_URL,{method:"POST",mode:"no-cors",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({action:"saveTexts",idToken:adminIdToken,texts:TEXT_EDITS,config:CFG_EDITS})});
+    await new Promise(r=>setTimeout(r,1100));
+    const res=await fetch(SHEET_URL+"?action=content&t="+Date.now());
+    const data=await res.json();
+    if(data && data.texts){
+      applyTextOverrides(data.texts);
+      if(data.config){ applyConfigOverrides(data.config); applyLogoConfig(); }
+      if(typeof applyLang==="function") applyLang();
+      setSt("Saved ✓  Students will see the new wording next time they open the app.","var(--green)");
     }else{
       setSt("Saved, but could not confirm. Please reload and check.","var(--amber)");
     }
