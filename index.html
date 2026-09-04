@@ -181,6 +181,16 @@
   .admtab.on{background:var(--brand);color:#fff;border-color:var(--brand)}
   .admspacer{flex:1 1 auto;min-width:8px}
   .admwho{font-size:12px;color:var(--muted)}
+  /* branded admin sign-in */
+  .adminlogin{max-width:360px;margin:10px auto 4px;text-align:center;padding:8px 0}
+  .adminlogo{width:82px;height:auto;display:block;margin:0 auto 12px}
+  .adminlogin-org{font-size:12px;letter-spacing:.17em;text-transform:uppercase;color:var(--brand);font-weight:700}
+  .adminlogin-h{font-size:22px;margin:6px 0 4px;letter-spacing:-.01em;text-transform:none;border-left:none;padding-left:0;color:var(--ink);font-weight:700}
+  .adminlogin-sub{font-size:13.5px;color:var(--muted);margin:0 0 22px;line-height:1.5}
+  .adminlogin-btn{display:flex;justify-content:center;margin:0 0 12px;min-height:44px}
+  .adminlogin-msg{font-size:13px;color:var(--muted);min-height:18px;margin:0 0 16px}
+  .linklike{background:none;border:none;color:var(--accent);font-weight:600;font-size:13.5px;cursor:pointer;font-family:inherit;padding:4px}
+  .linklike:hover{color:var(--accent-dark)}
   .iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;color:var(--muted)}
   .iconbtn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
   .iconbtn svg{width:18px;height:18px}
@@ -409,11 +419,13 @@
 <section id="scr-admin" class="card hidden">
   <h2 id="adminTitle">ADMIN ACCESS</h2>
 
-  <div id="adminLogin">
-    <p class="lede" style="margin-bottom:18px">For Anakut Yerng staff only. Sign in with your Google account.</p>
-    <div id="gsiButton" style="margin:0 0 12px"></div>
-    <p id="adminAuthMsg" style="font-size:13px;color:var(--muted);margin:0 0 18px"></p>
-    <button class="btn-ghost" type="button" id="aBack">Back to the test</button>
+  <div id="adminLogin" class="adminlogin">
+    <img id="adminLogo" alt="Anakut Yerng" class="adminlogo">
+    <div class="adminlogin-org">ANAKUT YERNG</div>
+    <h3 class="adminlogin-h">Staff &amp; Admin</h3>
+    <p class="adminlogin-sub">Sign in with your Google account to manage the test.</p>
+    <div id="gsiButton" class="adminlogin-btn"></div>
+    <p id="adminAuthMsg" class="adminlogin-msg"></p>
   </div>
 
   <div id="adminPanel" class="hidden"></div>
@@ -1702,6 +1714,8 @@ function ensureGis(){
 
 async function renderSignIn(){
   const msg=$("adminAuthMsg"); msg.textContent=""; msg.style.color="var(--muted)";
+  const logo=$("adminLogo"), brand=document.querySelector(".brandmark");
+  if(logo && brand && brand.src) logo.src=brand.src;
   try{
     await ensureGis();
     google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogleCredential, auto_select:false });
@@ -1740,7 +1754,7 @@ function showAdmin(){
   adminIdToken=null; adminRole=null; adminEmail=null;
   $("adminPanel").classList.add("hidden"); $("adminPanel").innerHTML="";
   $("adminLogin").classList.remove("hidden");
-  $("adminTitle").textContent="Admin access";
+  $("adminTitle").style.display="none";   // branded block has its own heading; tab bar labels the rest
   renderSignIn();
 }
 
@@ -1751,12 +1765,6 @@ function adminSignOut(){
 
 $("staffLink").addEventListener("click",e=>{ e.preventDefault(); showAdmin(); });
 $("adminBtn").addEventListener("click",()=>{ showAdmin(); });
-$("aBack").addEventListener("click",()=>{
-  $("scr-admin").classList.add("hidden");
-  $("scr-login").classList.remove("hidden");
-  setAdminLink(true);
-  location.hash="";
-});
 if(location.hash==="#admin") showAdmin();
 
 /* After sign-in, show the tabs — nothing heavy loads until a tab is tapped. */
