@@ -191,6 +191,21 @@
   .adminlogin-msg{font-size:13px;color:var(--muted);min-height:18px;margin:0 0 16px}
   .linklike{background:none;border:none;color:var(--accent);font-weight:600;font-size:13.5px;cursor:pointer;font-family:inherit;padding:4px}
   .linklike:hover{color:var(--accent-dark)}
+  .adminlogin{display:flex;flex-direction:column;justify-content:center;min-height:58vh}
+  /* admin home menu */
+  .admhome{max-width:340px;margin:0 auto;display:flex;flex-direction:column;justify-content:center;min-height:60vh}
+  .admhome-top{display:flex;align-items:center;gap:10px;margin:0 0 24px}
+  .admhome-logo{width:42px;height:auto;flex:0 0 auto}
+  .admhome-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .admhome-who{font-size:12.5px;color:var(--ink);font-weight:600}
+  .admhome-role{font-size:11px;color:#fff;background:var(--brand);border-radius:99px;padding:2px 9px;text-transform:capitalize}
+  .admhome-btns{display:flex;flex-direction:column;align-items:stretch;gap:12px}
+  .admbigbtn{width:100%;padding:16px 18px;font-size:15px;font-weight:600;font-family:inherit;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:12px;cursor:pointer;text-align:center;box-shadow:var(--shadow);transition:.12s}
+  .admbigbtn:hover{border-color:var(--brand);color:var(--brand)}
+  .admback{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line);margin:0 0 16px;padding:0 0 12px}
+  .prevcount{font-size:13px;font-weight:600;color:var(--ink);margin:0 0 12px}
+  .prevopt{cursor:default}
+  .prevnav{display:flex;justify-content:space-between;gap:10px;margin:18px 0 0}
   .iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;color:var(--muted)}
   .iconbtn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
   .iconbtn svg{width:18px;height:18px}
@@ -442,7 +457,7 @@
   <p id="btnNote" style="font-size:12.5px;color:var(--muted);margin:12px 0 0"></p>
 </section>
 
-<p class="foot noprint">
+<p class="foot noprint" id="pageFoot">
   CEFR = Common European Framework of Reference for Languages.<br>
   This is a placement assessment, not an accredited examination.<span id="adminAccessWrap"><br>
   <a href="#admin" class="adminlink" id="staffLink">Admin Access</a></span>
@@ -1754,7 +1769,8 @@ function showAdmin(){
   adminIdToken=null; adminRole=null; adminEmail=null;
   $("adminPanel").classList.add("hidden"); $("adminPanel").innerHTML="";
   $("adminLogin").classList.remove("hidden");
-  $("adminTitle").style.display="none";   // branded block has its own heading; tab bar labels the rest
+  $("adminTitle").style.display="none";   // branded block has its own heading
+  if($("pageFoot")) $("pageFoot").style.display="none";   // no CEFR footer on admin
   renderSignIn();
 }
 
@@ -1768,45 +1784,85 @@ $("adminBtn").addEventListener("click",()=>{ showAdmin(); });
 if(location.hash==="#admin") showAdmin();
 
 /* After sign-in, show the tabs — nothing heavy loads until a tab is tapped. */
+const icoAdmOut='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
+const icoAdmBack='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>';
+
+/* Home menu shown after sign-in: rabbit top-left, user top-right, big buttons per role. */
 function openAdminHome(){
   $("adminLogin").classList.add("hidden");
   $("adminPanel").classList.remove("hidden");
-  $("adminTitle").textContent="Admin";
   const box=$("adminPanel");
-  box.innerHTML=adminTabsHtml("")+'<p class="lede" style="margin-top:4px">Tap a tab above to begin.</p>';
-  wireAdminTabs();
+  const logo=(document.querySelector(".brandmark")||{}).src||"";
+  const buttons=[];
+  if(canManage()) buttons.push(["manage","Manage Access"]);
+  if(canEdit())   buttons.push(["edit","Edit Questions"]);
+  buttons.push(["preview","Preview Test"]);           // every role can preview
+  if(canResults())buttons.push(["results","See Results"]);
+  box.innerHTML='<div class="admhome">'+
+    '<div class="admhome-top">'+
+      '<img class="admhome-logo" src="'+logo+'" alt="">'+
+      '<div class="admhome-right"><span class="admhome-who">'+esc(adminEmail||"")+'</span>'+
+        '<span class="admhome-role">'+esc(adminRole||"")+'</span>'+
+        '<button type="button" class="iconbtn" id="admHomeOut" title="Sign out" aria-label="Sign out">'+icoAdmOut+'</button></div>'+
+    '</div>'+
+    '<div class="admhome-btns">'+
+      buttons.map(b=>'<button type="button" class="admbigbtn" data-go="'+b[0]+'">'+b[1]+'</button>').join('')+
+    '</div></div>';
+  box.querySelectorAll(".admbigbtn").forEach(b=>b.addEventListener("click",()=>openAdminTab(b.dataset.go)));
+  $("admHomeOut").addEventListener("click",adminSignOut);
 }
 
-const icoAdmOut='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
-
-/* Shared tab bar shown on every admin section. Only shows tabs this role allows. */
-function adminTabsHtml(active){
-  const tabs=[];
-  if(canResults()) tabs.push(["results","See results"]);
-  if(canEdit())    tabs.push(["edit","Edit questions"]);
-  if(canManage())  tabs.push(["manage","Manage access"]);
-  return '<div class="admtabs">'+
-    tabs.map(t=>'<button type="button" class="admtab'+(active===t[0]?" on":"")+'" data-tab="'+t[0]+'">'+t[1]+'</button>').join('')+
+/* Back bar at the top of every section — returns to the home menu (no re-sign-in). */
+function admBackBar(){
+  return '<div class="admback">'+
+    '<button type="button" class="iconbtn" id="admBack" title="Back to menu" aria-label="Back">'+icoAdmBack+'</button>'+
     '<span class="admspacer"></span>'+
     '<span class="admwho">'+esc(adminEmail||"")+' &middot; '+esc(adminRole||"")+'</span>'+
-    '<button type="button" class="btn-ghost" id="admExit">Back to test</button>'+
-    '<button type="button" class="iconbtn" id="admOut" title="Sign out" aria-label="Sign out">'+icoAdmOut+'</button>'+
+    '<button type="button" class="iconbtn" id="admBackOut" title="Sign out" aria-label="Sign out">'+icoAdmOut+'</button>'+
     '</div>';
 }
-function wireAdminTabs(){
-  document.querySelectorAll(".admtab").forEach(b=>b.addEventListener("click",()=>openAdminTab(b.dataset.tab)));
-  if($("admOut")) $("admOut").addEventListener("click",adminSignOut);
-  if($("admExit")) $("admExit").addEventListener("click",exitAdminToTest);
+function wireAdmBack(){
+  if($("admBack")) $("admBack").addEventListener("click",openAdminHome);
+  if($("admBackOut")) $("admBackOut").addEventListener("click",adminSignOut);
 }
+
 function openAdminTab(name){
-  if(name==="results" && canResults()){ $("adminTitle").textContent="Results"; loadResults(); }
-  else if(name==="edit" && canEdit()){ $("adminTitle").textContent="Edit questions"; openEditor(); }
-  else if(name==="manage" && canManage()){ $("adminTitle").textContent="Manage access"; openManageAccess(); }
+  if(name==="results" && canResults()) loadResults();
+  else if(name==="edit" && canEdit()) openEditor();
+  else if(name==="manage" && canManage()) openManageAccess();
+  else if(name==="preview") openPreview();
 }
-function exitAdminToTest(){
-  $("scr-admin").classList.add("hidden");
-  $("scr-login").classList.remove("hidden");
-  setAdminLink(true); location.hash=""; window.scrollTo({top:0});
+
+/* Preview Test — a read-only walkthrough of the questions, one at a time,
+   the way a student sees them (but nothing to fill in and no answers shown). */
+let PREV_IDX=0;
+function openPreview(){ PREV_IDX=0; renderPreview(); }
+function renderPreview(){
+  const box=$("adminPanel");
+  const q=QUESTIONS[PREV_IDX]||{};
+  let h=admBackBar();
+  h+='<div class="prevcount">Question '+(PREV_IDX+1)+' of '+QUESTIONS.length+
+     ' <span style="color:var(--muted)">('+esc(q.level||"")+' &middot; '+esc(q.skill||"")+')</span></div>';
+  h+='<div class="prevq">';
+  h+='<span class="tag">'+esc(q.skill||"")+'</span>';
+  if(typeof q.img==="string" && q.img.indexOf("<svg")===0) h+='<div class="pic">'+q.img+'</div>';
+  if(q.passage) h+='<div class="passage"><div class="ttl">'+esc(q.passage.title)+'</div>'+esc(q.passage.text)+'</div>';
+  if(q.cloze){ let t='<div class="cloze"><div class="ttl">'+esc(q.cloze.title)+'</div>';
+    q.cloze.parts.forEach((seg,n)=>{ t+=esc(seg); if(n<q.cloze.parts.length-1) t+='<span class="gap">'+(n+1)+'</span>'; });
+    h+=t+'</div>'; }
+  if(q.skill==="Listening" && q.audio) h+='<div class="passage"><div class="ttl">Recording (read aloud)</div>'+esc(q.audio)+'</div>';
+  h+='<div class="qtext">'+esc(q.q||"")+'</div>';
+  h+='<div class="opts">'+(q.opts||[]).map(o=>'<div class="opt prevopt">'+esc(o)+'</div>').join('')+'</div>';
+  h+='</div>';
+  h+='<div class="prevnav">'+
+     '<button type="button" class="btn-ghost" id="prevPrev"'+(PREV_IDX<=0?' disabled':'')+'>&larr; Previous</button>'+
+     '<button type="button" class="btn" id="prevNext"'+(PREV_IDX>=QUESTIONS.length-1?' disabled':'')+'>Next &rarr;</button>'+
+     '</div>';
+  box.innerHTML=h;
+  wireAdmBack();
+  if($("prevPrev")) $("prevPrev").addEventListener("click",()=>{ if(PREV_IDX>0){ PREV_IDX--; renderPreview(); } });
+  if($("prevNext")) $("prevNext").addEventListener("click",()=>{ if(PREV_IDX<QUESTIONS.length-1){ PREV_IDX++; renderPreview(); } });
+  window.scrollTo({top:0});
 }
 
 let ROWS=[], sortKey="taken_at", sortDir=-1, levelFilter="";
@@ -1857,7 +1913,7 @@ function renderResults(){
   const dist={};
   ROWS.forEach(r=>dist[r.level]=(dist[r.level]||0)+1);
 
-  let h=adminTabsHtml("results")+
+  let h=admBackBar()+
         '<div class="dist">'+
         '<button class="fpill'+(!levelFilter?' on':'')+'" data-lv="">All <strong>'+ROWS.length+'</strong></button>'+
         BANDS.map(b=>'<button class="fpill'+(levelFilter===b?' on':'')+'" data-lv="'+b+'">'+b+' <strong>'+(dist[b]||0)+'</strong></button>').join('')+'</div>';
@@ -1909,7 +1965,7 @@ function renderResults(){
     if(d.hasAttribute("hidden")){ d.removeAttribute("hidden"); a.textContent="See less"; }
     else { d.setAttribute("hidden",""); a.textContent="See more"; }
   }));
-  wireAdminTabs();
+  wireAdmBack();
   $("aCsv").addEventListener("click",downloadCsv);
   $("aReload").addEventListener("click",loadResults);
   box.querySelectorAll(".atable th").forEach(th=>th.addEventListener("click",()=>{
@@ -1970,7 +2026,7 @@ function qCardHtml(q,i){
 
 function renderEditor(){
   const box=$("adminPanel");
-  let h=adminTabsHtml("edit");
+  let h=admBackBar();
   h+='<div class="adminbar">'+
      '<button class="btn" id="eSave" style="flex:0 0 auto">Save changes</button>'+
      '<span id="eStatus" style="align-self:center;font-size:13px;color:var(--muted)"></span></div>';
@@ -2004,7 +2060,7 @@ function wireEditor(){
   }));
   $("eAdd").addEventListener("click",()=>{ EDIT_QS.push({level:"A1",skill:"Grammar",q:"",opts:["",""],a:0}); renderEditor(); window.scrollTo({top:document.body.scrollHeight}); });
   $("eSave").addEventListener("click",saveEditor);
-  wireAdminTabs();
+  wireAdmBack();
 }
 
 async function saveEditor(){
@@ -2079,7 +2135,7 @@ function maRoleSelect(role, idx){
 
 function renderManageAccess(){
   const box=$("adminPanel");
-  let h=adminTabsHtml("manage");
+  let h=admBackBar();
   h+='<div class="adminbar">'+
      '<button class="btn" id="maSave" style="flex:0 0 auto">Save access list</button>'+
      '<button class="btn-ghost" id="maInvite">Email the staff link</button>'+
@@ -2110,7 +2166,7 @@ function renderManageAccess(){
   });
   $("maSave").addEventListener("click",saveManageAccess);
   $("maInvite").addEventListener("click",inviteStaff);
-  wireAdminTabs();
+  wireAdmBack();
 }
 
 async function inviteStaff(){
