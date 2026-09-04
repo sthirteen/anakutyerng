@@ -195,10 +195,12 @@
   /* admin home menu */
   .admhome{max-width:340px;margin:0 auto;display:flex;flex-direction:column;justify-content:center;min-height:60vh}
   .admhome-top{display:flex;align-items:center;gap:10px;margin:0 0 24px}
-  .admhome-logo{width:42px;height:auto;flex:0 0 auto}
-  .admhome-right{margin-left:auto;display:flex;align-items:center;gap:8px}
-  .admhome-who{font-size:12.5px;color:var(--ink);font-weight:600}
-  .admhome-role{font-size:11px;color:#fff;background:var(--brand);border-radius:99px;padding:2px 9px;text-transform:capitalize}
+  .admhome-logo{width:44px;height:auto;flex:0 0 auto}
+  .admhome-right{margin-left:auto;display:flex;align-items:center;gap:9px}
+  .admhome-who{font-size:20px;color:var(--ink);font-weight:700;letter-spacing:-.01em;text-transform:capitalize}
+  .admhome-role{font-size:13px;color:#fff;background:var(--brand);border-radius:99px;padding:4px 13px;text-transform:capitalize;font-weight:600}
+  .admsignout{display:block;margin:26px auto 0;background:none;border:none;color:var(--accent);font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;padding:6px}
+  .admsignout:hover{color:var(--accent-dark)}
   .admhome-btns{display:flex;flex-direction:column;align-items:stretch;gap:12px}
   .admbigbtn{width:100%;padding:16px 18px;font-size:15px;font-weight:600;font-family:inherit;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:12px;cursor:pointer;text-align:center;box-shadow:var(--shadow);transition:.12s}
   .admbigbtn:hover{border-color:var(--brand);color:var(--brand)}
@@ -1798,16 +1800,18 @@ function openAdminHome(){
   if(canEdit())   buttons.push(["edit","Edit Questions"]);
   buttons.push(["preview","Preview Test"]);           // every role can preview
   if(canResults())buttons.push(["results","See Results"]);
+  const userName=(adminEmail||"").split("@")[0];
   box.innerHTML='<div class="admhome">'+
     '<div class="admhome-top">'+
       '<img class="admhome-logo" src="'+logo+'" alt="">'+
-      '<div class="admhome-right"><span class="admhome-who">'+esc(adminEmail||"")+'</span>'+
-        '<span class="admhome-role">'+esc(adminRole||"")+'</span>'+
-        '<button type="button" class="iconbtn" id="admHomeOut" title="Sign out" aria-label="Sign out">'+icoAdmOut+'</button></div>'+
+      '<div class="admhome-right"><span class="admhome-who">'+esc(userName)+'</span>'+
+        '<span class="admhome-role">'+esc(adminRole||"")+'</span></div>'+
     '</div>'+
     '<div class="admhome-btns">'+
       buttons.map(b=>'<button type="button" class="admbigbtn" data-go="'+b[0]+'">'+b[1]+'</button>').join('')+
-    '</div></div>';
+    '</div>'+
+    '<button type="button" class="admsignout" id="admHomeOut">Sign out</button>'+
+  '</div>';
   box.querySelectorAll(".admbigbtn").forEach(b=>b.addEventListener("click",()=>openAdminTab(b.dataset.go)));
   $("admHomeOut").addEventListener("click",adminSignOut);
 }
@@ -1817,7 +1821,7 @@ function admBackBar(){
   return '<div class="admback">'+
     '<button type="button" class="iconbtn" id="admBack" title="Back to menu" aria-label="Back">'+icoAdmBack+'</button>'+
     '<span class="admspacer"></span>'+
-    '<span class="admwho">'+esc(adminEmail||"")+' &middot; '+esc(adminRole||"")+'</span>'+
+    '<span class="admwho">'+esc((adminEmail||"").split("@")[0])+' &middot; '+esc(adminRole||"")+'</span>'+
     '<button type="button" class="iconbtn" id="admBackOut" title="Sign out" aria-label="Sign out">'+icoAdmOut+'</button>'+
     '</div>';
 }
