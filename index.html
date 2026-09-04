@@ -97,6 +97,13 @@
 
   .pic{text-align:center;background:#f8fafb;border:1px solid var(--line);border-radius:10px;padding:14px 12px;margin:0 0 18px}
   .pic svg{max-width:100%;height:auto;display:inline-block}
+  .pic img{max-width:100%;max-height:260px;height:auto;display:inline-block;border-radius:8px}
+  .qpic{background:#f8fafb;border:1px solid var(--line);border-radius:10px;padding:12px;margin:0 0 12px}
+  .qpic-prev{text-align:center;margin:0 0 10px}
+  .qpic-prev svg,.qpic-prev img{max-width:100%;max-height:180px;height:auto;display:inline-block;border-radius:6px}
+  .qpic-none{color:var(--muted);font-size:13px}
+  .qpic-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .qpicup{cursor:pointer;margin:0}
   .revpic{margin:0 0 8px}
   .revpic svg{width:58px;height:auto}
 
@@ -194,8 +201,9 @@
   .adminlogin{display:flex;flex-direction:column;justify-content:center;min-height:58vh}
   /* admin home menu */
   .admhome{max-width:340px;margin:0 auto;display:flex;flex-direction:column;justify-content:center;min-height:60vh}
-  .admhome-top{display:flex;margin:0 0 6px}
-  .admhome-logo{width:44px;height:auto;flex:0 0 auto}
+  .admhome-top{display:flex;flex-direction:column;align-items:center;margin:0 0 12px}
+  .admhome-logo{width:52px;height:auto;flex:0 0 auto}
+  .admhome-title{font-size:15px;font-weight:700;letter-spacing:.12em;color:var(--ink);margin:8px 0 0;text-align:center}
   .admhome-user{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 20px}
   .admhome-who{font-size:13.5px;color:var(--ink);font-weight:600;text-transform:capitalize}
   .admhome-role{font-size:11px;color:#fff;background:var(--brand);border-radius:99px;padding:2px 10px;text-transform:capitalize;font-weight:600}
@@ -672,6 +680,16 @@ function serializeQuestions(list){
   });
 }
 
+/* Turn a stored picture (inline SVG string OR an uploaded data:/http image URL)
+   into safe markup for display. */
+function picHtml(img){
+  if(typeof img!=="string" || !img) return "";
+  var s=img.trim();
+  if(s.indexOf("<svg")===0 || s.indexOf("<")===0) return s;          // inline SVG / markup
+  if(/^(data:|https?:\/\/)/i.test(s)) return '<img src="'+s+'" alt="">';
+  return "";
+}
+
 /* The live question set. Starts as the built-in defaults (works with no internet);
    loadContentFromSheet() may replace it with the admin-edited set at startup. */
 let QUESTIONS = resolveQuestions(DEFAULT_QUESTIONS);
@@ -954,7 +972,7 @@ function render(){
 
   let html='<span class="tag">'+first.skill+'</span>';
 
-  if(first.img)     html+='<div class="pic">'+first.img+'</div>';
+  if(first.img)     html+='<div class="pic">'+picHtml(first.img)+'</div>';
   if(first.passage) html+='<div class="passage"><div class="ttl">'+esc(first.passage.title)+'</div>'+esc(first.passage.text)+'</div>';
 
   if(first.cloze){
@@ -1802,7 +1820,8 @@ function openAdminHome(){
   if(canResults())buttons.push(["results","See Results"]);
   const userName=(adminEmail||"").split("@")[0];
   box.innerHTML='<div class="admhome">'+
-    '<div class="admhome-top"><img class="admhome-logo" src="'+logo+'" alt=""></div>'+
+    '<div class="admhome-top"><img class="admhome-logo" src="'+logo+'" alt="">'+
+      '<div class="admhome-title">CEFR ASSESSMENT</div></div>'+
     '<div class="admhome-user"><span class="admhome-who">'+esc(userName)+'</span>'+
       '<span class="admhome-role">'+esc(adminRole||"")+'</span></div>'+
     '<div class="admhome-btns">'+
@@ -1847,7 +1866,7 @@ function renderPreview(){
      ' <span style="color:var(--muted)">('+esc(q.level||"")+' &middot; '+esc(q.skill||"")+')</span></div>';
   h+='<div class="prevq">';
   h+='<span class="tag">'+esc(q.skill||"")+'</span>';
-  if(typeof q.img==="string" && q.img.indexOf("<svg")===0) h+='<div class="pic">'+q.img+'</div>';
+  if(q.img) h+='<div class="pic">'+picHtml(q.img)+'</div>';
   if(q.passage) h+='<div class="passage"><div class="ttl">'+esc(q.passage.title)+'</div>'+esc(q.passage.text)+'</div>';
   if(q.cloze){ let t='<div class="cloze"><div class="ttl">'+esc(q.cloze.title)+'</div>';
     q.cloze.parts.forEach((seg,n)=>{ t+=esc(seg); if(n<q.cloze.parts.length-1) t+='<span class="gap">'+(n+1)+'</span>'; });
@@ -2003,9 +2022,17 @@ async function openEditor(){
 
 function qCardHtml(q,i){
   const isListen=(q.skill==="Listening");
+  const isPic=(q.skill==="Pictures");
   const ctx = q.passage ? ('Reading passage: '+esc((PASSAGES[q.passage]&&PASSAGES[q.passage].title)||q.passage))
             : q.cloze   ? ('Gap-fill: '+esc((CLOZES[q.cloze]&&CLOZES[q.cloze].title)||q.cloze)+(q.blank?' — gap '+q.blank:''))
-            : (typeof q.img==="string") ? 'Picture question' : '';
+            : isPic ? 'Picture question' : '';
+  const picBlock = isPic ? ('<div class="qpic">'+
+      '<div class="qpic-prev">'+(q.img?picHtml(q.img):'<span class="qpic-none">No picture yet</span>')+'</div>'+
+      '<div class="qpic-btns">'+
+        '<label class="btn-ghost qpicup">'+(q.img?'Change picture':'Upload picture')+
+          '<input type="file" accept="image/*" class="qpicfile" data-i="'+i+'" hidden></label>'+
+        (q.img?'<button type="button" class="btn-ghost qpicdel" data-i="'+i+'">Remove picture</button>':'')+
+      '</div></div>') : '';
   const opts=(q.opts||[]).map((o,oi)=>
     '<div class="qopt">'+
       '<input type="radio" name="correct-'+i+'" data-i="'+i+'" data-a="'+oi+'"'+(q.a===oi?' checked':'')+' title="Correct answer">'+
@@ -2018,6 +2045,7 @@ function qCardHtml(q,i){
       '<select class="qskill" data-i="'+i+'">'+ED_SKILLS.map(s=>'<option'+(q.skill===s?' selected':'')+'>'+esc(s)+'</option>').join('')+'</select>'+
       '<button type="button" class="qdel" data-i="'+i+'">Delete</button></div>'+
     (ctx?'<div class="qctx">'+ctx+'</div>':'')+
+    picBlock+
     '<textarea class="qtext" data-i="'+i+'" rows="2" placeholder="Question text">'+esc(q.q||'')+'</textarea>'+
     '<div class="qopts">'+opts+'</div>'+
     '<button type="button" class="qaddopt btn-ghost" data-i="'+i+'">+ Add option</button>'+
@@ -2041,8 +2069,32 @@ function renderEditor(){
   wireEditor();
 }
 
+/* Read an uploaded image, shrink it to a sensible size, return a small JPEG data URL. */
+function fileToPicDataUrl(file){
+  return new Promise((resolve,reject)=>{
+    const url=URL.createObjectURL(file);
+    const im=new Image();
+    im.onload=()=>{
+      const max=640; let w=im.width||max, h=im.height||max;
+      if(w>max){ h=Math.round(h*max/w); w=max; }
+      const c=document.createElement("canvas"); c.width=w; c.height=h;
+      c.getContext("2d").drawImage(im,0,0,w,h);
+      URL.revokeObjectURL(url);
+      try{ resolve(c.toDataURL("image/jpeg",0.82)); }catch(e){ reject(e); }
+    };
+    im.onerror=()=>{ URL.revokeObjectURL(url); reject(new Error("bad image")); };
+    im.src=url;
+  });
+}
+
 function wireEditor(){
   const box=$("adminPanel");
+  box.querySelectorAll(".qpicfile").forEach(inp=>inp.addEventListener("change",async()=>{
+    const f=inp.files&&inp.files[0]; if(!f) return;
+    try{ EDIT_QS[+inp.dataset.i].img=await fileToPicDataUrl(f); renderEditor(); }
+    catch(_){ alert("Sorry, that image could not be read. Try a JPG or PNG."); }
+  }));
+  box.querySelectorAll(".qpicdel").forEach(b=>b.addEventListener("click",()=>{ EDIT_QS[+b.dataset.i].img=""; renderEditor(); }));
   box.querySelectorAll(".qtext").forEach(t=>t.addEventListener("input",()=>{ EDIT_QS[+t.dataset.i].q=t.value; }));
   box.querySelectorAll(".qoptin").forEach(t=>t.addEventListener("input",()=>{ EDIT_QS[+t.dataset.i].opts[+t.dataset.oi]=t.value; }));
   box.querySelectorAll(".qaudio").forEach(t=>t.addEventListener("input",()=>{ EDIT_QS[+t.dataset.i].audio=t.value; }));
