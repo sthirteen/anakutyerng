@@ -263,8 +263,8 @@
   .admhome-user{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 20px}
   .admhome-who{font-size:13.5px;color:var(--ink);font-weight:600;text-transform:capitalize}
   .admhome-role{font-size:11px;color:#fff;background:var(--brand);border-radius:99px;padding:2px 10px;text-transform:capitalize;font-weight:600}
-  .admsignout{display:block;margin:26px auto 0;background:none;border:none;color:var(--accent);font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;padding:6px}
-  .admsignout:hover{color:var(--accent-dark)}
+  .admsignout{display:block;width:fit-content;margin:26px auto 0;background:var(--brand);color:#fff;border:none;border-radius:99px;padding:7px 22px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit}
+  .admsignout:hover{background:var(--brand-dark)}
   .admhome-btns{display:flex;flex-direction:column;align-items:stretch;gap:12px}
   .admbigbtn{width:100%;padding:16px 18px;font-size:15px;font-weight:600;font-family:inherit;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:12px;cursor:pointer;text-align:center;box-shadow:var(--shadow);transition:.12s}
   .admbigbtn:hover{border-color:var(--brand);color:var(--brand)}
@@ -1950,7 +1950,7 @@ function openAdminHome(){
     '<div class="admhome-btns">'+
       buttons.map(b=>'<button type="button" class="admbigbtn" data-go="'+b[0]+'">'+b[1]+'</button>').join('')+
     '</div>'+
-    '<button type="button" class="admsignout" id="admHomeOut">Sign out</button>'+
+    '<button type="button" class="admsignout" id="admHomeOut">Sign Out</button>'+
   '</div>';
   box.querySelectorAll(".admbigbtn").forEach(b=>b.addEventListener("click",()=>openAdminTab(b.dataset.go)));
   $("admHomeOut").addEventListener("click",adminSignOut);
