@@ -203,6 +203,22 @@
   .txin:focus{outline:none;border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px var(--brand-soft)}
   @media (max-width:560px){ .txfields{grid-template-columns:1fr} }
   .txsmall{font-size:12.5px;color:var(--muted);margin:0 0 12px}
+  /* live page editor */
+  .edtabs{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:0 0 8px}
+  .edtab{font-size:13px;padding:7px 14px;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;font-weight:600;font-family:inherit;color:var(--ink)}
+  .edtab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .edlang{margin-left:auto;display:flex;gap:4px;border:1px solid var(--line);border-radius:9px;padding:3px}
+  .edlangbtn{font-size:12.5px;padding:5px 12px;border:none;background:none;border-radius:7px;cursor:pointer;font-weight:600;font-family:inherit;color:var(--muted)}
+  .edlangbtn.on{background:var(--brand);color:#fff}
+  .edsettings{border:1px solid var(--line);border-radius:10px;padding:4px 14px;margin:0 0 14px;background:#fbfcfd}
+  .edsettings summary{cursor:pointer;font-weight:600;font-size:13px;padding:8px 0;color:var(--ink)}
+  .edsettings .txgroup{margin-top:10px}
+  .edcanvas{background:repeating-linear-gradient(45deg,#f2f3f5,#f2f3f5 11px,#edeff1 11px,#edeff1 22px);border:1px solid var(--line);border-radius:12px;padding:20px}
+  .edcanvas .card{margin:0 auto;max-width:560px;box-shadow:0 6px 24px rgba(20,30,50,.10)}
+  .edtx{outline:none;border-radius:4px;cursor:text;transition:box-shadow .1s}
+  .edtx:hover{box-shadow:0 0 0 2px var(--brand-soft)}
+  .edtx:focus{box-shadow:0 0 0 2px var(--brand);background:#fff}
+  .edmsgs{border-top:1px dashed var(--line);margin-top:18px;padding-top:6px}
   /* logo editor */
   .logoedit{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
   .logoedit-prev{background:#f8fafb;border:1px solid var(--line);border-radius:10px;padding:14px;text-align:center;min-width:130px}
@@ -2353,7 +2369,7 @@ const TEXT_GROUPS=[
     ["issued","\"Issued\" label"]
   ]}
 ];
-let TEXT_EDITS=null, CFG_EDITS=null;
+let TEXT_EDITS=null, CFG_EDITS=null, edPage="login", edLang="en";
 const BTN_META=[["btnDl","Download Result"],["btnSend","Send to Teacher"],["btnAgain","Take Another Test"]];
 
 function openTextEditor(){
@@ -2364,8 +2380,17 @@ function openTextEditor(){
     TEXT_EDITS[key]={en:cur.en||"",km:cur.km||""};
   }));
   CFG_EDITS=JSON.parse(JSON.stringify(CFG));   // logo + buttons working copy
+  edPage="login"; edLang="en";
   renderTextEditor();
 }
+
+/* current edited value of a text key for the chosen language (falls back to T) */
+function te(key){
+  if(TEXT_EDITS[key] && TEXT_EDITS[key][edLang]!==undefined && TEXT_EDITS[key][edLang]!=="") return TEXT_EDITS[key][edLang];
+  if(T[key]) return (T[key][edLang]!==undefined?T[key][edLang]:T[key].en)||"";
+  return "";
+}
+function edSave(key,val){ if(!TEXT_EDITS[key]) TEXT_EDITS[key]={en:"",km:""}; TEXT_EDITS[key][edLang]=val; }
 
 function logoSectionHtml(){
   const lg=CFG_EDITS.logo||{};
@@ -2413,59 +2438,158 @@ function renderTextEditor(){
   h+='<div class="adminbar">'+
      '<button class="btn" id="txSave" style="flex:0 0 auto">Save changes</button>'+
      '<span id="txStatus" style="align-self:center;font-size:13px;color:var(--muted)"></span></div>';
-  h+='<p style="font-size:13px;color:var(--muted);margin:0 0 14px">Change any wording below. '+
-     'Fill in English and Khmer. Leave a box as it is to keep the current wording. '+
-     'Text in &lt;em&gt;…&lt;/em&gt; shows in italics. Changes go live next time a student opens the app.</p>';
-  h+=logoSectionHtml();
-  h+=buttonSectionHtml();
-  TEXT_GROUPS.forEach(g=>{
-    h+='<div class="txgroup"><div class="txgroup-h">'+esc(g.title)+'</div>';
-    g.keys.forEach(k=>{
-      const key=k[0], label=k[1], v=TEXT_EDITS[key]||{en:"",km:""};
-      h+='<div class="txrow"><div class="txlbl">'+esc(label)+'</div>'+
-         '<div class="txfields">'+
-           '<label class="txf"><span>English</span><textarea class="txin" data-k="'+key+'" data-l="en" rows="2">'+esc(v.en)+'</textarea></label>'+
-           '<label class="txf"><span>ខ្មែរ (Khmer)</span><textarea class="txin" data-k="'+key+'" data-l="km" rows="2">'+esc(v.km)+'</textarea></label>'+
-         '</div></div>';
-    });
-    h+='</div>';
-  });
-  h+='<button class="btn" id="txSave2" style="margin-top:6px">Save changes</button>';
+  const tab=(p,l)=>'<button type="button" class="edtab'+(edPage===p?' on':'')+'" data-page="'+p+'">'+l+'</button>';
+  const lng=(l,label)=>'<button type="button" class="edlangbtn'+(edLang===l?' on':'')+'" data-lang="'+l+'">'+label+'</button>';
+  h+='<div class="edtabs">'+tab('login','Sign-in')+tab('result','Result')+tab('cert','Certificate')+
+     '<span class="edlang">'+lng('en','English')+lng('km','ខ្មែរ')+'</span></div>';
+  h+='<p class="txsmall">Tap any text on the page below and type to change it — you are editing the '+
+     (edLang==='en'?'English':'Khmer')+' version. Open “Logo &amp; button settings” to change the logo or buttons.</p>';
+  h+='<details class="edsettings"><summary>Logo &amp; button settings</summary>'+logoSectionHtml()+buttonSectionHtml()+'</details>';
+  h+='<div class="edcanvas" id="edCanvas"></div>';
+  h+='<button class="btn" id="txSave2" style="margin-top:14px">Save changes</button>';
   box.innerHTML=h;
   wireAdmBack();
-  box.querySelectorAll(".txin").forEach(t=>t.addEventListener("input",()=>{
-    if(t.classList.contains("btnUrl")){ CFG_EDITS.buttons[t.dataset.k].url=t.value; return; }
-    if(TEXT_EDITS[t.dataset.k]) TEXT_EDITS[t.dataset.k][t.dataset.l]=t.value;
-  }));
-  // logo: image upload / reset
-  const lf=$("logoFile");
-  if(lf) lf.addEventListener("change",async()=>{
-    const f=lf.files&&lf.files[0]; if(!f) return;
-    try{ const d=await fileToPicDataUrl(f); CFG_EDITS.logo.src=d; const p=$("logoPrev"); if(p) p.src=d; }
-    catch(_){ alert("Sorry, that image could not be read. Try a JPG or PNG."); }
-  });
-  if($("logoReset")) $("logoReset").addEventListener("click",()=>{
-    CFG_EDITS.logo.src=""; renderTextEditor();
-  });
-  if($("logoShow")) $("logoShow").addEventListener("change",e=>{ CFG_EDITS.logo.show=e.target.checked; });
-  // segmented controls (logo position/size)
-  box.querySelectorAll(".segbtn[data-seg]").forEach(b=>b.addEventListener("click",()=>{
-    CFG_EDITS.logo[b.dataset.seg]=b.dataset.val;
-    box.querySelectorAll('.segbtn[data-seg="'+b.dataset.seg+'"]').forEach(x=>x.classList.remove("on"));
-    b.classList.add("on");
-  }));
-  // buttons: show/hide, mode, url
-  box.querySelectorAll(".btnShow").forEach(c=>c.addEventListener("change",()=>{ CFG_EDITS.buttons[c.dataset.k].show=c.checked; }));
-  box.querySelectorAll(".btnMode").forEach(b=>b.addEventListener("click",()=>{
-    const k=b.dataset.k, mode=b.dataset.mode;
-    CFG_EDITS.buttons[k].mode=mode;
-    box.querySelectorAll('.btnMode[data-k="'+k+'"]').forEach(x=>x.classList.remove("on"));
-    b.classList.add("on");
-    const url=box.querySelector('.btnUrl[data-k="'+k+'"]'); if(url) url.style.display=(mode==="link")?"":"none";
-  }));
+  renderEdCanvas();
+  wireEdSettings(box);
+  box.querySelectorAll(".edtab").forEach(b=>b.addEventListener("click",()=>{ edPage=b.dataset.page; renderTextEditor(); }));
+  box.querySelectorAll(".edlangbtn").forEach(b=>b.addEventListener("click",()=>{ edLang=b.dataset.lang; renderTextEditor(); }));
   if($("txSave")) $("txSave").addEventListener("click",saveTextEditor);
   if($("txSave2")) $("txSave2").addEventListener("click",saveTextEditor);
   window.scrollTo({top:0});
+}
+
+const SIGNIN_MAP={ 't-sub':'sub','t-f1l':'f1l','t-f2v':'f2v','t-f2l':'f2l','t-f3l':'f3l','t-f4v':'f4v','t-f4l':'f4l',
+  't-noteH':'noteH','t-noteB':'noteB','t-nameL':'nameL','t-ageL':'ageL','t-emailL':'emailL','t-opt1':'opt','t-opt2':'opt',
+  'emailNote':'emailNote','t-tgL':'tgL','t-tgNote':'tgNote','privacy':'privacy','t-start':'start' };
+
+function renderEdCanvas(){
+  const canvas=$("edCanvas"); if(!canvas) return;
+  if(edPage==="login"){ renderEdLogin(canvas); }
+  else { canvas.innerHTML='<div class="card edpage">'+edResultHTML(edPage==="cert")+'</div>'; }
+  // remove leftover ids so the clone/sample doesn't clash with the real page
+  canvas.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));
+  // make everything that is not an editable text inert
+  canvas.querySelectorAll('input,select').forEach(e=>{ e.disabled=true; e.tabIndex=-1; });
+  canvas.querySelectorAll('form').forEach(f=>f.addEventListener('submit',e=>e.preventDefault()));
+  canvas.oninput=edCanvasInput;   // assignment (not add) so it never stacks
+}
+function edCanvasInput(e){
+  const el=e.target.closest('[data-tkey]'); if(!el) return;
+  edSave(el.getAttribute('data-tkey'), el.innerHTML.trim());
+}
+
+function applyLogoToEl(lg){
+  if(!lg) return; const c=CFG_EDITS.logo||{};
+  lg.style.display=(c.show===false)?"none":"block";
+  if(c.src) lg.src=c.src;
+  lg.style.width=((c.size==="small")?90:(c.size==="large")?160:120)+"px";
+  if(c.align==="left"){ lg.style.marginLeft="0"; lg.style.marginRight="auto"; }
+  else if(c.align==="right"){ lg.style.marginLeft="auto"; lg.style.marginRight="0"; }
+  else { lg.style.marginLeft="auto"; lg.style.marginRight="auto"; }
+}
+
+function renderEdLogin(canvas){
+  const src=document.getElementById("scr-login");
+  const clone=src.cloneNode(true);
+  clone.classList.remove("hidden");
+  const lb=clone.querySelector('.langbar'); if(lb) lb.remove();
+  Object.keys(SIGNIN_MAP).forEach(function(id){
+    const el=clone.querySelector('#'+id); if(!el) return;
+    const key=SIGNIN_MAP[id];
+    el.innerHTML=te(key);
+    el.setAttribute('contenteditable','true');
+    el.setAttribute('data-tkey',key);
+    el.classList.add('edtx');
+  });
+  applyLogoToEl(clone.querySelector('.brandmark'));
+  canvas.innerHTML=''; canvas.appendChild(clone);
+}
+
+/* Build the result / certificate exactly as students see it, with sample data,
+   and each editable text wrapped so it can be clicked and typed over. */
+function edResultHTML(certOnly){
+  const sr={ level:"B1", total:18,
+    perSkill:{Grammar:{c:4,n:4},Vocabulary:{c:3,n:4},Cloze:{c:2,n:3},Reading:{c:3,n:4},Listening:{c:3,n:4},
+              "Error correction":{c:2,n:4},Register:{c:2,n:3},Spelling:{c:2,n:2},Pictures:{c:2,n:2}},
+    perBand:{A1:{c:5,n:5},A2:{c:4,n:5},B1:{c:3,n:5},B2:{c:2,n:5},C1:{c:1,n:5},C2:{c:0,n:5}},
+    need:function(b){ return Math.ceil(this.perBand[b].n*0.6); } };
+  const info=bandInfo("B1"), nm="Sophea Chan", em="sophea@example.com";
+  const tt=k=>'<span class="edtx" contenteditable="true" data-tkey="'+k+'">'+te(k)+'</span>';
+  const date=new Date().toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"});
+  let h='<div class="cert">'+
+    '<div class="cert-top"><img class="cert-rabbit" alt="" src="'+CERT_RABBIT+'"><div class="cert-org">ANAKUT YERNG</div>'+
+    '<div class="cert-ttl">CEFR Assessment</div><div style="font-size:12.5px;opacity:.8;margin-top:3px">'+tt("stmt")+'</div></div>'+
+    '<div class="cert-body">'+
+    '<div class="cert-lbl">'+tt("certify")+'</div>'+
+    '<div class="cert-name">'+esc(nm)+'</div>'+
+    '<div class="cert-lbl">'+tt("assessed")+'</div>'+
+    '<div class="cert-lvl">'+sr.level+'</div>'+
+    '<div class="cert-lvlname">'+info.name+'</div>'+
+    '<div class="cert-desc">'+info.desc+'</div>'+
+    '<div class="cert-meta">'+
+      '<div><b>'+sr.total+' / '+QUESTIONS.length+'</b><span>'+tt("qCorrect")+'</span></div>'+
+      '<div><b>'+Math.round(sr.total/QUESTIONS.length*100)+'%</b><span>'+tt("overall")+'</span></div>'+
+      '<div><b>12m 34s</b><span>'+tt("timeTaken")+'</span></div>'+
+    '</div></div></div>'+
+    '<p class="lede" style="margin:-10px 0 22px;font-size:13px">'+tt("issued")+' '+date+' &nbsp;·&nbsp; '+esc(nm)+'</p>';
+  if(certOnly) return h;
+  h+='<div class="cando"><h4>'+tt("canDo")+'</h4><ul>'+info.cando.map(c=>'<li>'+c+'</li>').join('')+'</ul></div>';
+  h+='<h3>'+tt("bySkill")+'</h3><div class="sk">';
+  ["Grammar","Vocabulary","Cloze","Reading","Listening","Error correction","Register","Spelling","Pictures"].forEach(function(s){
+    const d=sr.perSkill[s]; if(!d) return; const p=Math.round(d.c/d.n*100);
+    h+='<div class="skrow"><span>'+tt("sk"+s)+'</span><div class="mini"><i style="width:'+p+'%"></i></div>'+
+       '<span class="n" style="text-align:right">'+d.c+'/'+d.n+'</span></div>';
+  });
+  h+='</div>';
+  h+='<h3>'+tt("byBand")+'</h3><table><thead><tr><th>'+tt("thBand")+'</th><th>'+tt("thLevel")+'</th>'+
+     '<th class="n">'+tt("thCorrect")+'</th><th style="text-align:right">'+tt("thResult")+'</th></tr></thead><tbody>';
+  BANDS.forEach(function(b){ const d=sr.perBand[b]; const pass=d.c>=sr.need(b);
+    const cls=pass?"ok":(d.c>0?"part":"no"); const txt=pass?tt("mastered"):(d.c>0?tt("partial"):tt("notyet"));
+    h+='<tr><td><strong>'+b+'</strong></td><td>'+bandInfo(b).name+'</td>'+
+       '<td class="n">'+d.c+' / '+d.n+'</td><td style="text-align:right"><span class="pill '+cls+'">'+txt+'</span></td></tr>';
+  });
+  h+='</tbody></table>';
+  h+='<h3>'+tt("workNext")+'</h3><ul class="adv">'+info.advice.map(a=>'<li>'+a+'</li>').join("")+'</ul>';
+  h+='<p style="font-size:13px;color:var(--muted);background:var(--brand-soft);border-radius:8px;padding:11px 13px">'+tt("pdfNote")+'</p>';
+  h+='<p style="font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px">'+tt("method")+'</p>';
+  // the three result buttons — reflect show/hide live; tap the text to rename
+  const B=CFG_EDITS.buttons;
+  h+='<div class="btnrow" style="margin-top:16px">'+
+     (B.btnDl.show!==false?'<button class="btn edtx" contenteditable="true" data-tkey="btnDl">'+te("btnDl")+'</button>':'')+
+     (B.btnSend.show!==false?'<button class="btn edtx" contenteditable="true" data-tkey="btnSend">'+te("btnSend")+'</button>':'')+
+     (B.btnAgain.show!==false?'<button class="btn-ghost edtx" contenteditable="true" data-tkey="btnAgain">'+te("btnAgain")+'</button>':'')+
+     '</div>';
+  // delivery/status messages a student may see (so all wording stays editable)
+  h+='<div class="edmsgs"><div class="txsmall" style="margin:18px 0 6px">Messages shown while the result is sent:</div>'+
+     '<div class="note noprint">'+tt("sending")+'</div>'+
+     '<div class="note"><strong>'+tt("sent")+'</strong> '+tt("sentCopyPre")+'<em>'+esc(em)+'</em>. '+tt("keepCopy")+'</div>'+
+     '<div class="note" style="border-left-color:var(--red)"><strong>'+tt("notSentH")+'</strong>'+tt("notSentRest")+'</div>'+
+     '<div class="note">'+tt("workingPre")+'B1'+tt("workingMid")+'B1'+tt("workingPost")+'</div>'+
+     '<div class="note">'+tt("belowNote")+'</div></div>';
+  return h;
+}
+
+function wireEdSettings(box){
+  const lf=$("logoFile");
+  if(lf) lf.addEventListener("change",async()=>{
+    const f=lf.files&&lf.files[0]; if(!f) return;
+    try{ const d=await fileToPicDataUrl(f); CFG_EDITS.logo.src=d; const p=$("logoPrev"); if(p) p.src=d; renderEdCanvas(); }
+    catch(_){ alert("Sorry, that image could not be read. Try a JPG or PNG."); }
+  });
+  if($("logoReset")) $("logoReset").addEventListener("click",()=>{ CFG_EDITS.logo.src=""; renderTextEditor(); });
+  if($("logoShow")) $("logoShow").addEventListener("change",e=>{ CFG_EDITS.logo.show=e.target.checked; renderEdCanvas(); });
+  box.querySelectorAll(".segbtn[data-seg]").forEach(b=>b.addEventListener("click",()=>{
+    CFG_EDITS.logo[b.dataset.seg]=b.dataset.val;
+    box.querySelectorAll('.segbtn[data-seg="'+b.dataset.seg+'"]').forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); renderEdCanvas();
+  }));
+  box.querySelectorAll(".btnShow").forEach(c=>c.addEventListener("change",()=>{ CFG_EDITS.buttons[c.dataset.k].show=c.checked; renderEdCanvas(); }));
+  box.querySelectorAll(".btnMode").forEach(b=>b.addEventListener("click",()=>{
+    const k=b.dataset.k, mode=b.dataset.mode; CFG_EDITS.buttons[k].mode=mode;
+    box.querySelectorAll('.btnMode[data-k="'+k+'"]').forEach(x=>x.classList.remove("on")); b.classList.add("on");
+    const url=box.querySelector('.btnUrl[data-k="'+k+'"]'); if(url) url.style.display=(mode==="link")?"":"none";
+  }));
+  box.querySelectorAll(".btnUrl").forEach(u=>u.addEventListener("input",()=>{ CFG_EDITS.buttons[u.dataset.k].url=u.value; }));
 }
 
 async function saveTextEditor(){
