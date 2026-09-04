@@ -175,6 +175,12 @@
   .maAdd input[type=email]{flex:1 1 200px;width:auto;padding:9px 12px;font-size:14px;font-family:inherit;border:1px solid var(--line);border-radius:8px;background:#fbfcfd;color:var(--ink)}
   .maAdd select,.maRole{padding:8px 10px;font-size:13px;font-family:inherit;border:1px solid var(--line);border-radius:8px;background:#fbfcfd;color:var(--ink)}
   .maDel{width:28px;height:28px;border:1px solid var(--line);background:#fff;color:var(--red);border-radius:7px;cursor:pointer;font-size:16px;line-height:1}
+  /* admin tab bar */
+  .admtabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:0 0 16px;padding:0 0 12px}
+  .admtab{font-size:13.5px;font-weight:600;padding:8px 15px;border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:9px;cursor:pointer;font-family:inherit}
+  .admtab.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .admspacer{flex:1 1 auto;min-width:8px}
+  .admwho{font-size:12px;color:var(--muted)}
   .iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;color:var(--muted)}
   .iconbtn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
   .iconbtn svg{width:18px;height:18px}
@@ -1753,13 +1759,46 @@ $("aBack").addEventListener("click",()=>{
 });
 if(location.hash==="#admin") showAdmin();
 
-/* After sign-in, open the first thing this role is allowed to see. */
+/* After sign-in, show the tabs — nothing heavy loads until a tab is tapped. */
 function openAdminHome(){
   $("adminLogin").classList.add("hidden");
   $("adminPanel").classList.remove("hidden");
-  if(canResults()){ $("adminTitle").textContent="Results"; loadResults(); }
-  else if(adminRole==="technical"){ $("adminTitle").textContent="Edit questions"; openEditor(); }
-  else { adminSignOut(); }
+  $("adminTitle").textContent="Admin";
+  const box=$("adminPanel");
+  box.innerHTML=adminTabsHtml("")+'<p class="lede" style="margin-top:4px">Tap a tab above to begin.</p>';
+  wireAdminTabs();
+}
+
+const icoAdmOut='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
+
+/* Shared tab bar shown on every admin section. Only shows tabs this role allows. */
+function adminTabsHtml(active){
+  const tabs=[];
+  if(canResults()) tabs.push(["results","See results"]);
+  if(canEdit())    tabs.push(["edit","Edit questions"]);
+  if(canManage())  tabs.push(["manage","Manage access"]);
+  return '<div class="admtabs">'+
+    tabs.map(t=>'<button type="button" class="admtab'+(active===t[0]?" on":"")+'" data-tab="'+t[0]+'">'+t[1]+'</button>').join('')+
+    '<span class="admspacer"></span>'+
+    '<span class="admwho">'+esc(adminEmail||"")+' &middot; '+esc(adminRole||"")+'</span>'+
+    '<button type="button" class="btn-ghost" id="admExit">Back to test</button>'+
+    '<button type="button" class="iconbtn" id="admOut" title="Sign out" aria-label="Sign out">'+icoAdmOut+'</button>'+
+    '</div>';
+}
+function wireAdminTabs(){
+  document.querySelectorAll(".admtab").forEach(b=>b.addEventListener("click",()=>openAdminTab(b.dataset.tab)));
+  if($("admOut")) $("admOut").addEventListener("click",adminSignOut);
+  if($("admExit")) $("admExit").addEventListener("click",exitAdminToTest);
+}
+function openAdminTab(name){
+  if(name==="results" && canResults()){ $("adminTitle").textContent="Results"; loadResults(); }
+  else if(name==="edit" && canEdit()){ $("adminTitle").textContent="Edit questions"; openEditor(); }
+  else if(name==="manage" && canManage()){ $("adminTitle").textContent="Manage access"; openManageAccess(); }
+}
+function exitAdminToTest(){
+  $("scr-admin").classList.add("hidden");
+  $("scr-login").classList.remove("hidden");
+  setAdminLink(true); location.hash=""; window.scrollTo({top:0});
 }
 
 let ROWS=[], sortKey="taken_at", sortDir=-1, levelFilter="";
@@ -1810,12 +1849,7 @@ function renderResults(){
   const dist={};
   ROWS.forEach(r=>dist[r.level]=(dist[r.level]||0)+1);
 
-  const icoReload='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
-  const icoOut='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
-
-  let h='<div class="admin-top">'+
-        '<button class="iconbtn" id="aReload" title="Reload" aria-label="Reload">'+icoReload+'</button>'+
-        '<button class="iconbtn" id="aOut" title="Sign out" aria-label="Sign out">'+icoOut+'</button></div>'+
+  let h=adminTabsHtml("results")+
         '<div class="dist">'+
         '<button class="fpill'+(!levelFilter?' on':'')+'" data-lv="">All <strong>'+ROWS.length+'</strong></button>'+
         BANDS.map(b=>'<button class="fpill'+(levelFilter===b?' on':'')+'" data-lv="'+b+'">'+b+' <strong>'+(dist[b]||0)+'</strong></button>').join('')+'</div>';
@@ -1823,10 +1857,7 @@ function renderResults(){
   h+='<div class="adminbar">'+
      '<input type="text" id="aSearch" placeholder="Search by name…" value="'+esc(q)+'">'+
      '<button class="btn-ghost" id="aCsv">Download CSV</button>'+
-     (canEdit()?'<button class="btn-ghost" id="aEditQ">Edit questions</button>':'')+
-     (canManage()?'<button class="btn-ghost" id="aManage">Manage access</button>':'')+
-     '<button class="btn-ghost" id="aBackTest">Back to test</button></div>'+
-     '<p style="font-size:12px;color:var(--muted);margin:-6px 0 10px">Signed in as '+esc(adminEmail||"")+' &middot; '+esc(adminRole||"")+'</p>';
+     '<button class="btn-ghost" id="aReload">Reload</button></div>';
 
   if(!rows.length){
     h+='<p class="lede">No results match.</p>';
@@ -1870,18 +1901,9 @@ function renderResults(){
     if(d.hasAttribute("hidden")){ d.removeAttribute("hidden"); a.textContent="See less"; }
     else { d.setAttribute("hidden",""); a.textContent="See more"; }
   }));
+  wireAdminTabs();
   $("aCsv").addEventListener("click",downloadCsv);
-  if($("aEditQ")) $("aEditQ").addEventListener("click",openEditor);
-  if($("aManage")) $("aManage").addEventListener("click",openManageAccess);
   $("aReload").addEventListener("click",loadResults);
-  $("aBackTest").addEventListener("click",()=>{
-    $("scr-admin").classList.add("hidden");
-    $("scr-login").classList.remove("hidden");
-    setAdminLink(true);
-    location.hash="";
-    window.scrollTo({top:0});
-  });
-  $("aOut").addEventListener("click",adminSignOut);
   box.querySelectorAll(".atable th").forEach(th=>th.addEventListener("click",()=>{
     const k=th.getAttribute("data-k");
     if(k===sortKey) sortDir=-sortDir; else { sortKey=k; sortDir=1; }
@@ -1940,13 +1962,9 @@ function qCardHtml(q,i){
 
 function renderEditor(){
   const box=$("adminPanel");
-  const icoOut='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
-  let h='<div class="admin-top"><button class="iconbtn" id="eOut" title="Sign out" aria-label="Sign out">'+icoOut+'</button></div>';
+  let h=adminTabsHtml("edit");
   h+='<div class="adminbar">'+
-     (canResults()?'<button class="btn-ghost" id="eBackRes">&larr; Results</button>':'')+
      '<button class="btn" id="eSave" style="flex:0 0 auto">Save changes</button>'+
-     (canManage()?'<button class="btn-ghost" id="eManage">Manage access</button>':'')+
-     (!canResults()?'<button class="btn-ghost" id="eBackTest">Back to test</button>':'')+
      '<span id="eStatus" style="align-self:center;font-size:13px;color:var(--muted)"></span></div>';
   h+='<p style="font-size:13px;color:var(--muted);margin:0 0 14px">Edit any question below. '+
      'Click the dot on the left of an answer to mark it correct. Changes go live for students the next time they open the test. '+
@@ -1978,13 +1996,7 @@ function wireEditor(){
   }));
   $("eAdd").addEventListener("click",()=>{ EDIT_QS.push({level:"A1",skill:"Grammar",q:"",opts:["",""],a:0}); renderEditor(); window.scrollTo({top:document.body.scrollHeight}); });
   $("eSave").addEventListener("click",saveEditor);
-  if($("eBackRes")) $("eBackRes").addEventListener("click",()=>{ $("adminTitle").textContent="Results"; loadResults(); });
-  if($("eManage")) $("eManage").addEventListener("click",openManageAccess);
-  if($("eBackTest")) $("eBackTest").addEventListener("click",()=>{
-    $("scr-admin").classList.add("hidden"); $("scr-login").classList.remove("hidden");
-    setAdminLink(true); location.hash=""; window.scrollTo({top:0});
-  });
-  $("eOut").addEventListener("click",adminSignOut);
+  wireAdminTabs();
 }
 
 async function saveEditor(){
@@ -2059,11 +2071,10 @@ function maRoleSelect(role, idx){
 
 function renderManageAccess(){
   const box=$("adminPanel");
-  const icoOut='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
-  let h='<div class="admin-top"><button class="iconbtn" id="maOut" title="Sign out" aria-label="Sign out">'+icoOut+'</button></div>';
+  let h=adminTabsHtml("manage");
   h+='<div class="adminbar">'+
-     '<button class="btn-ghost" id="maBack">&larr; Results</button>'+
      '<button class="btn" id="maSave" style="flex:0 0 auto">Save access list</button>'+
+     '<button class="btn-ghost" id="maInvite">Email the staff link</button>'+
      '<span id="maStatus" style="align-self:center;font-size:13px;color:var(--muted)"></span></div>';
   h+='<p style="font-size:13px;color:var(--muted);margin:0 0 12px">You (the master, '+esc(adminEmail||"")+') always have full access and cannot be removed. Roles: '+
      '<b>admin</b> = view results + edit; <b>technical</b> = edit only, no results; <b>monitor</b> = view results only. Changes take effect after you Save.</p>';
@@ -2089,9 +2100,21 @@ function renderManageAccess(){
     if(MA_USERS.some(u=>u.email===em)){ st.textContent="That email is already on the list."; st.style.color="var(--amber)"; return; }
     MA_USERS.push({email:em,role:role}); renderManageAccess();
   });
-  $("maBack").addEventListener("click",()=>{ $("adminTitle").textContent="Results"; loadResults(); });
   $("maSave").addEventListener("click",saveManageAccess);
-  $("maOut").addEventListener("click",adminSignOut);
+  $("maInvite").addEventListener("click",inviteStaff);
+  wireAdminTabs();
+}
+
+async function inviteStaff(){
+  const st=$("maStatus");
+  if(!confirm("Email everyone on the saved access list the staff sign-in link? (Save the list first if you just changed it.)")) return;
+  st.textContent="Sending invites…"; st.style.color="var(--muted)";
+  try{
+    await fetch(SHEET_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({action:"inviteStaff",idToken:adminIdToken})});
+    await new Promise(r=>setTimeout(r,1200));
+    st.textContent="Invites sent ✓  They just open the link and sign in with Google."; st.style.color="var(--green)";
+  }catch(err){ st.textContent="Could not send invites. Try again."; st.style.color="var(--red)"; }
 }
 
 async function saveManageAccess(){
