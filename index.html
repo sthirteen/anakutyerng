@@ -177,6 +177,20 @@
   .qaddopt{margin:2px 0 0;font-size:12.5px;padding:6px 11px}
   .qaudlbl{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin:10px 0 0}
   .qaudlbl textarea{margin-top:5px}
+  /* full passage / cloze shown inside the editor card */
+  .qread{background:#f8fafb;border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin:0 0 11px}
+  .qread-ttl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+  .qread-txt{font-size:14px;line-height:1.6;color:var(--ink);white-space:pre-wrap}
+  .qgap{display:inline-block;min-width:20px;text-align:center;border-bottom:2px solid var(--brand);color:var(--brand);font-weight:700;margin:0 3px}
+  /* smaller picture buttons */
+  .qpicbtn{font-size:12px;padding:5px 12px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:7px;cursor:pointer;font-weight:600;font-family:inherit;line-height:1.2}
+  .qpicbtn.qpicdel{color:var(--red)}
+  .qpicbtn:hover{border-color:var(--brand)}
+  /* editor field labels */
+  .qfield{display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:11px 0 0}
+  .qfield textarea{margin-top:5px}
+  .qfield-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:12px 0 0}
+  .qhint{font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted)}
   /* manage access */
   .maAdd{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 6px}
   .maAdd input[type=email]{flex:1 1 200px;width:auto;padding:9px 12px;font-size:14px;font-family:inherit;border:1px solid var(--line);border-radius:8px;background:#fbfcfd;color:var(--ink)}
@@ -214,7 +228,9 @@
   .admbigbtn:hover{border-color:var(--brand);color:var(--brand)}
   .admback{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line);margin:0 0 16px;padding:0 0 12px}
   .prevcount{font-size:13px;font-weight:600;color:var(--ink);margin:0 0 12px}
-  .prevopt{cursor:default}
+  .prevopt{cursor:default;position:relative}
+  .prevcorrect{border-color:var(--green,#16a34a);background:#f0fdf4;color:#14532d;font-weight:600}
+  .prevtag{float:right;background:var(--green,#16a34a);color:#fff;font-size:11px;font-weight:700;border-radius:99px;padding:2px 9px;margin-left:8px}
   .prevnav{display:flex;justify-content:space-between;gap:10px;margin:18px 0 0}
   .iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;color:var(--muted)}
   .iconbtn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
@@ -329,6 +345,15 @@
   }
   @keyframes wordIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
   @keyframes dot{0%,100%{transform:translateY(0);opacity:.55}50%{transform:translateY(-5px);opacity:1}}
+  /* small loading splash when an admin menu button is tapped (no rabbit) */
+  .admload{position:fixed;inset:0;z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+    background:radial-gradient(120% 120% at 50% 38%, #ff7d1f 0%, var(--brand) 52%, var(--brand-dark) 100%);animation:admloadIn .16s ease}
+  .admload-word{color:#fff;font-weight:800;letter-spacing:.24em;font-size:15px;text-shadow:0 1px 10px rgba(120,40,0,.3)}
+  .admload-dots{display:flex;gap:7px}
+  .admload-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.85);display:block;animation:dot 1s ease-in-out infinite}
+  .admload-dots i:nth-child(2){animation-delay:.16s}
+  .admload-dots i:nth-child(3){animation-delay:.32s}
+  @keyframes admloadIn{from{opacity:0}to{opacity:1}}
   @keyframes whiteOut{from{opacity:1}to{opacity:0}}
   @keyframes splashOut{to{opacity:0;visibility:hidden}}
   @media print{#splash{display:none!important}}
@@ -1847,11 +1872,25 @@ function wireAdmBack(){
   if($("admBackOut")) $("admBackOut").addEventListener("click",adminSignOut);
 }
 
+function showAdmLoad(){
+  var el=document.getElementById("admLoad");
+  if(!el){ el=document.createElement("div"); el.id="admLoad"; el.className="admload";
+    el.innerHTML='<div class="admload-word">ANAKUT YERNG</div>'+
+      '<div class="admload-dots"><i></i><i></i><i></i></div>';
+    document.body.appendChild(el); }
+  el.style.display="flex";
+}
+function hideAdmLoad(){ var el=document.getElementById("admLoad"); if(el) el.style.display="none"; }
+
 function openAdminTab(name){
-  if(name==="results" && canResults()) loadResults();
-  else if(name==="edit" && canEdit()) openEditor();
-  else if(name==="manage" && canManage()) openManageAccess();
-  else if(name==="preview") openPreview();
+  showAdmLoad();
+  setTimeout(function(){
+    if(name==="results" && canResults()) loadResults();
+    else if(name==="edit" && canEdit()) openEditor();
+    else if(name==="manage" && canManage()) openManageAccess();
+    else if(name==="preview") openPreview();
+    setTimeout(hideAdmLoad, 620);
+  }, 40);
 }
 
 /* Preview Test — a read-only walkthrough of the questions, one at a time,
@@ -1873,7 +1912,8 @@ function renderPreview(){
     h+=t+'</div>'; }
   if(q.skill==="Listening" && q.audio) h+='<div class="passage"><div class="ttl">Recording (read aloud)</div>'+esc(q.audio)+'</div>';
   h+='<div class="qtext">'+esc(q.q||"")+'</div>';
-  h+='<div class="opts">'+(q.opts||[]).map(o=>'<div class="opt prevopt">'+esc(o)+'</div>').join('')+'</div>';
+  h+='<div class="opts">'+(q.opts||[]).map((o,oi)=>'<div class="opt prevopt'+(oi===q.a?' prevcorrect':'')+'">'+
+     esc(o)+(oi===q.a?'<span class="prevtag">✓ Correct</span>':'')+'</div>').join('')+'</div>';
   h+='</div>';
   h+='<div class="prevnav">'+
      '<button type="button" class="btn-ghost" id="prevPrev"'+(PREV_IDX<=0?' disabled':'')+'>&larr; Previous</button>'+
@@ -2023,15 +2063,25 @@ async function openEditor(){
 function qCardHtml(q,i){
   const isListen=(q.skill==="Listening");
   const isPic=(q.skill==="Pictures");
-  const ctx = q.passage ? ('Reading passage: '+esc((PASSAGES[q.passage]&&PASSAGES[q.passage].title)||q.passage))
-            : q.cloze   ? ('Gap-fill: '+esc((CLOZES[q.cloze]&&CLOZES[q.cloze].title)||q.cloze)+(q.blank?' — gap '+q.blank:''))
-            : isPic ? 'Picture question' : '';
+  // Full reading passage (shown so the whole question is visible in the editor)
+  const pObj = q.passage ? PASSAGES[q.passage] : null;
+  const passageBlock = pObj ? ('<div class="qread"><div class="qread-ttl">Reading passage — '+esc(pObj.title||'')+'</div>'+
+      '<div class="qread-txt">'+esc(pObj.text||'')+'</div></div>') : '';
+  // Full gap-fill text with the numbered gaps in place
+  const cObj = q.cloze ? CLOZES[q.cloze] : null;
+  let clozeBlock='';
+  if(cObj){ let ct='';
+    (cObj.parts||[]).forEach((seg,n)=>{ ct+=esc(seg); if(n<cObj.parts.length-1) ct+='<span class="qgap">'+(n+1)+'</span>'; });
+    clozeBlock='<div class="qread"><div class="qread-ttl">Gap-fill — '+esc(cObj.title||'')+
+      (q.blank?' &middot; this question is gap '+q.blank:'')+'</div><div class="qread-txt">'+ct+'</div></div>';
+  }
   const picBlock = isPic ? ('<div class="qpic">'+
+      '<div class="qread-ttl" style="margin:0 0 8px">Picture</div>'+
       '<div class="qpic-prev">'+(q.img?picHtml(q.img):'<span class="qpic-none">No picture yet</span>')+'</div>'+
       '<div class="qpic-btns">'+
-        '<label class="btn-ghost qpicup">'+(q.img?'Change picture':'Upload picture')+
+        '<label class="qpicbtn qpicup">'+(q.img?'Change':'Upload')+
           '<input type="file" accept="image/*" class="qpicfile" data-i="'+i+'" hidden></label>'+
-        (q.img?'<button type="button" class="btn-ghost qpicdel" data-i="'+i+'">Remove picture</button>':'')+
+        (q.img?'<button type="button" class="qpicbtn qpicdel" data-i="'+i+'">Remove</button>':'')+
       '</div></div>') : '';
   const opts=(q.opts||[]).map((o,oi)=>
     '<div class="qopt">'+
@@ -2044,13 +2094,15 @@ function qCardHtml(q,i){
       '<select class="qlevel" data-i="'+i+'">'+ED_LEVELS.map(l=>'<option'+(q.level===l?' selected':'')+'>'+l+'</option>').join('')+'</select>'+
       '<select class="qskill" data-i="'+i+'">'+ED_SKILLS.map(s=>'<option'+(q.skill===s?' selected':'')+'>'+esc(s)+'</option>').join('')+'</select>'+
       '<button type="button" class="qdel" data-i="'+i+'">Delete</button></div>'+
-    (ctx?'<div class="qctx">'+ctx+'</div>':'')+
+    passageBlock+
+    clozeBlock+
     picBlock+
-    '<textarea class="qtext" data-i="'+i+'" rows="2" placeholder="Question text">'+esc(q.q||'')+'</textarea>'+
-    '<div class="qopts">'+opts+'</div>'+
-    '<button type="button" class="qaddopt btn-ghost" data-i="'+i+'">+ Add option</button>'+
     (isListen?'<label class="qaudlbl">Listening — the words the device reads aloud'+
       '<textarea class="qaudio" data-i="'+i+'" rows="2" placeholder="e.g. The market opens at six in the morning.">'+esc(q.audio||'')+'</textarea></label>':'')+
+    '<label class="qfield">Question<textarea class="qtext" data-i="'+i+'" rows="2" placeholder="Question text">'+esc(q.q||'')+'</textarea></label>'+
+    '<div class="qfield-lbl">Answers <span class="qhint">(tap the dot to mark the correct one)</span></div>'+
+    '<div class="qopts">'+opts+'</div>'+
+    '<button type="button" class="qaddopt btn-ghost" data-i="'+i+'">+ Add option</button>'+
   '</div>';
 }
 
@@ -2062,7 +2114,7 @@ function renderEditor(){
      '<span id="eStatus" style="align-self:center;font-size:13px;color:var(--muted)"></span></div>';
   h+='<p style="font-size:13px;color:var(--muted);margin:0 0 14px">Edit any question below. '+
      'Click the dot on the left of an answer to mark it correct. Changes go live for students the next time they open the test. '+
-     '(Reading passages, gap-fill texts and pictures are shown for context and get their own editor later.)</p>';
+     'The full picture, reading passage and gap-fill text are shown inside each question; passage and gap-fill wording is read-only for now.</p>';
   h+='<div id="qlist">'+EDIT_QS.map((q,i)=>qCardHtml(q,i)).join('')+'</div>';
   h+='<button type="button" class="btn-ghost" id="eAdd" style="margin-top:6px">+ Add a question</button>';
   box.innerHTML=h;
