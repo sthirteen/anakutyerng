@@ -1964,7 +1964,16 @@ function adminSignOut(){
 
 $("staffLink").addEventListener("click",e=>{ e.preventDefault(); showAdmin(); });
 $("adminBtn").addEventListener("click",()=>{ showAdmin(); });
-if(location.hash==="#admin") showAdmin();
+/* Staff entrance: the /admin page sets a one-time flag then lands here on the
+   clean URL (no #). Also still honour #admin as a quiet fallback. */
+(function(){
+  var viaFlag=false;
+  try{ if(sessionStorage.getItem("anakutStaff")){ sessionStorage.removeItem("anakutStaff"); viaFlag=true; } }catch(e){}
+  if(viaFlag || location.hash==="#admin"){
+    if(location.hash) { try{ history.replaceState(null,"",location.pathname+location.search); }catch(e){} }
+    showAdmin();
+  }
+})();
 
 /* After sign-in, show the tabs — nothing heavy loads until a tab is tapped. */
 const icoAdmOut='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
