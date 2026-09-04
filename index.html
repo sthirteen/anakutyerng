@@ -252,6 +252,12 @@
   .adminlogin-sub{font-size:13.5px;color:var(--muted);margin:0 0 22px;line-height:1.5}
   .adminlogin-btn{display:flex;justify-content:center;margin:0 0 12px;min-height:44px}
   .adminlogin-msg{font-size:13px;color:var(--muted);min-height:18px;margin:0 0 16px}
+  .pwtoggle{background:none;border:none;color:var(--muted);font-size:12.5px;font-family:inherit;text-decoration:underline;cursor:pointer;padding:4px}
+  .pwbox{max-width:300px;margin:12px auto 0;text-align:left}
+  .pwbox-note{font-size:12px;color:var(--muted);line-height:1.5;margin:0 0 10px}
+  .pwinput{width:100%;padding:10px 12px;font-size:14px;font-family:inherit;border:1px solid var(--line);border-radius:9px;background:#fbfcfd;margin:0 0 9px;box-sizing:border-box}
+  .pwinput:focus{outline:none;border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px var(--brand-soft)}
+  .pwbox .btn{width:100%}
   .linklike{background:none;border:none;color:var(--accent);font-weight:600;font-size:13.5px;cursor:pointer;font-family:inherit;padding:4px}
   .linklike:hover{color:var(--accent-dark)}
   .adminlogin{display:flex;flex-direction:column;justify-content:center;min-height:58vh}
@@ -518,6 +524,14 @@
     <p class="adminlogin-sub">Sign in with your Google account to manage the test.</p>
     <div id="gsiButton" class="adminlogin-btn"></div>
     <p id="adminAuthMsg" class="adminlogin-msg"></p>
+    <button type="button" id="pwToggle" class="pwtoggle">Trouble signing in with Google?</button>
+    <div id="pwBox" class="pwbox hidden">
+      <p class="pwbox-note">Use this only if Google sign-in isn't working. Enter your <b>@alongsiders.org</b> email and the staff password.</p>
+      <input type="email" id="pwEmail" class="pwinput" placeholder="name@alongsiders.org" autocomplete="off">
+      <input type="password" id="pwPass" class="pwinput" placeholder="Staff password" autocomplete="off">
+      <button type="button" id="pwSubmit" class="btn">Sign in</button>
+      <p id="pwMsg" class="adminlogin-msg"></p>
+    </div>
   </div>
 
   <div id="adminPanel" class="hidden"></div>
@@ -1845,7 +1859,7 @@ async function sendToTeacher(){
    ============================================================ */
 const GOOGLE_CLIENT_ID = "385956282589-vu361jqpqf4g909mk88miajbr22n333m.apps.googleusercontent.com";
 const MASTER_EMAIL_CLIENT = "sam@alongsiders.org";
-let adminIdToken = null, adminRole = null, adminEmail = null;
+let adminIdToken = null, adminRole = null, adminEmail = null, adminToken = null;
 
 /* who can do what */
 const canResults = ()=> (adminRole==="master"||adminRole==="admin"||adminRole==="monitor");
@@ -1873,6 +1887,10 @@ async function renderSignIn(){
   const msg=$("adminAuthMsg"); msg.textContent=""; msg.style.color="var(--muted)";
   const logo=$("adminLogo"), brand=document.querySelector(".brandmark");
   if(logo && brand && brand.src) logo.src=brand.src;
+  // reset the email+password backup (hidden until the user asks for it)
+  if($("pwBox")){ $("pwBox").classList.add("hidden"); $("pwEmail").value=""; $("pwPass").value=""; $("pwMsg").textContent=""; }
+  if($("pwToggle")) $("pwToggle").onclick=()=>{ $("pwBox").classList.toggle("hidden"); };
+  if($("pwSubmit")) $("pwSubmit").onclick=onPasswordLogin;
   try{
     await ensureGis();
     google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogleCredential, auto_select:false });
@@ -1896,10 +1914,33 @@ async function onGoogleCredential(resp){
         " is not on the access list. Ask the master (Sam) to add you.</strong>";
       return;
     }
-    adminIdToken=idToken; adminRole=data.role; adminEmail=data.email;
+    adminIdToken=idToken; adminToken=null; adminRole=data.role; adminEmail=data.email;
     openAdminHome();
   }catch(err){
     msg.innerHTML="<strong style='color:var(--red)'>Could not verify your sign-in. Please try again.</strong>";
+  }
+}
+
+/* Backup sign-in: @alongsiders.org email + shared staff password.
+   Only for when Google sign-in is not working. */
+async function onPasswordLogin(){
+  const msg=$("pwMsg");
+  const email=($("pwEmail").value||"").trim().toLowerCase();
+  const pass=$("pwPass").value||"";
+  if(!email || !pass){ msg.textContent="Enter your email and the staff password."; msg.style.color="var(--red)"; return; }
+  msg.textContent="Signing in…"; msg.style.color="var(--muted)";
+  try{
+    const r=await fetch(SHEET_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({action:"passwordLogin",email:email,password:pass})});
+    const data=await r.json();
+    if(!data || !data.ok || !data.role){
+      msg.innerHTML="<strong style='color:var(--red)'>"+esc((data&&data.error)||"Sign-in failed")+". Check your email and password.</strong>";
+      return;
+    }
+    adminToken=data.token||null; adminIdToken=null; adminRole=data.role; adminEmail=data.email||email;
+    openAdminHome();
+  }catch(err){
+    msg.innerHTML="<strong style='color:var(--red)'>Could not sign in. Check your internet and try again.</strong>";
   }
 }
 
@@ -1908,7 +1949,7 @@ function showAdmin(){
   $("scr-admin").classList.remove("hidden");
   setAdminLink(false);
   window.scrollTo({top:0});
-  adminIdToken=null; adminRole=null; adminEmail=null;
+  adminIdToken=null; adminRole=null; adminEmail=null; adminToken=null;
   $("adminPanel").classList.add("hidden"); $("adminPanel").innerHTML="";
   $("adminLogin").classList.remove("hidden");
   $("adminTitle").style.display="none";   // branded block has its own heading
@@ -1936,7 +1977,7 @@ function openAdminHome(){
   const box=$("adminPanel");
   const logo=(document.querySelector(".brandmark")||{}).src||"";
   const buttons=[];
-  if(canManage()) buttons.push(["manage","Manage Access"]);
+  if(canManage() && adminIdToken) buttons.push(["manage","Manage Access"]);   // needs Google sign-in
   if(canEdit())   buttons.push(["edit","Edit Questions"]);
   if(canEdit())   buttons.push(["texts","Edit Pages"]);
   buttons.push(["preview","Preview Test"]);           // every role can preview
@@ -2038,7 +2079,8 @@ async function loadResults(){
   }
   box.innerHTML='<p class="lede">Loading results&hellip;</p>';
   try{
-    const res=await fetch(SHEET_URL+"?action=results&idToken="+encodeURIComponent(adminIdToken)+"&t="+Date.now());
+    const auth = adminIdToken ? ("idToken="+encodeURIComponent(adminIdToken)) : ("token="+encodeURIComponent(adminToken||""));
+    const res=await fetch(SHEET_URL+"?action=results&"+auth+"&t="+Date.now());
     const data=await res.json();
     if(!data.ok){
       if(String(data.error||"").indexOf("access")>-1){
@@ -2290,7 +2332,7 @@ async function saveEditor(){
   try{
     await fetch(SHEET_URL,{method:"POST",mode:"no-cors",
       headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify({action:"saveContent",idToken:adminIdToken,questions:EDIT_QS})});
+      body:JSON.stringify({action:"saveContent",idToken:adminIdToken,token:adminToken,questions:EDIT_QS})});
     await new Promise(r=>setTimeout(r,1100));
     const res=await fetch(SHEET_URL+"?action=content&t="+Date.now());
     const data=await res.json();
@@ -2599,7 +2641,7 @@ async function saveTextEditor(){
   try{
     await fetch(SHEET_URL,{method:"POST",mode:"no-cors",
       headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify({action:"saveTexts",idToken:adminIdToken,texts:TEXT_EDITS,config:CFG_EDITS})});
+      body:JSON.stringify({action:"saveTexts",idToken:adminIdToken,token:adminToken,texts:TEXT_EDITS,config:CFG_EDITS})});
     await new Promise(r=>setTimeout(r,1100));
     const res=await fetch(SHEET_URL+"?action=content&t="+Date.now());
     const data=await res.json();
